@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="robots" content="noindex">
+<title>My catalogue · Resell Ready</title>
+<style>
+  :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --brand-soft:#e6f4f1; --red:#c1121f; --bg:#f6f7f8; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--brand); color:#fff; padding:14px 16px 12px; position:sticky; top:0; z-index:5; }
+  header h1 { margin:0; font-size:19px; font-weight:700; }
+  header p { margin:2px 0 0; font-size:13px; opacity:.85; }
+  .bar { display:flex; gap:8px; padding:10px 12px; overflow-x:auto; background:#fff; border-bottom:1px solid var(--line); position:sticky; top:62px; z-index:4; }
+  .chip { flex:none; border:1px solid var(--line); background:#fff; border-radius:999px; padding:8px 14px; font-size:14px; color:var(--ink); }
+  .chip.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .tools { display:flex; gap:8px; padding:10px 12px 0; }
+  .tools input, .tools select { flex:1; min-width:0; font-size:15px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+  .hint { margin:10px 12px 0; padding:10px 12px; background:var(--brand-soft); border-radius:10px; font-size:13.5px; line-height:1.4; }
+  .grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; padding:12px 12px 120px; }
+  @media (min-width:640px) { .grid { grid-template-columns:repeat(3, 1fr); } }
+  @media (min-width:960px) { .grid { grid-template-columns:repeat(5, 1fr); max-width:1200px; margin:0 auto; } }
+  .card { background:#fff; border-radius:12px; overflow:hidden; border:2px solid transparent; position:relative; }
+  .card.sel { border-color:var(--brand); }
+  .pic { position:relative; aspect-ratio:4/5; background:#eef0f2; }
+  .pic img { width:100%; height:100%; object-fit:cover; display:block; }
+  .price { position:absolute; right:6px; top:6px; background:var(--red); color:#fff; font-weight:700; font-size:14px; padding:3px 8px; border-radius:8px; }
+  .tick { position:absolute; left:6px; top:6px; width:28px; height:28px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,.25); display:grid; place-items:center; color:#fff; font-weight:700; }
+  .card.sel .tick { background:var(--brand); }
+  .count { position:absolute; left:6px; bottom:6px; background:rgba(0,0,0,.55); color:#fff; font-size:12px; padding:2px 7px; border-radius:6px; }
+  .meta { padding:8px 9px 9px; }
+  .meta b { display:block; font-size:13.5px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta small { display:block; color:var(--muted); font-size:12px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .one { margin-top:7px; width:100%; border:1px solid var(--brand); color:var(--brand); background:#fff; border-radius:8px; padding:7px; font-size:13.5px; font-weight:600; }
+  .foot { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); display:none; gap:8px; align-items:center; z-index:6; box-shadow:0 -4px 16px rgba(0,0,0,.06); }
+  .foot.show { display:flex; }
+  .foot .n { font-size:14px; font-weight:600; margin-right:auto; }
+  .btn { border:0; border-radius:10px; padding:12px 14px; font-size:15px; font-weight:600; }
+  .btn.main { background:#25d366; color:#fff; }
+  .btn.alt { background:#eef0f2; color:var(--ink); }
+  .empty, .err { text-align:center; color:var(--muted); padding:48px 24px; font-size:15px; line-height:1.5; }
+  .toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:#111827; color:#fff; padding:10px 14px; border-radius:10px; font-size:14px; max-width:90vw; z-index:9; opacity:0; transition:opacity .2s; pointer-events:none; text-align:center; }
+  .toast.show { opacity:1; }
+  .busy { position:fixed; inset:0; background:rgba(255,255,255,.7); display:none; place-items:center; z-index:8; font-size:15px; font-weight:600; }
+  .busy.show { display:grid; }
+</style>
+</head>
+<body>
+<header><h1 id="title">…</h1><p id="sub"></p></header>
+<div class="bar" id="days"></div>
+<div class="tools"><input id="q" type="search" autocomplete="off"><select id="sup" hidden></select></div>
+<div class="hint" id="hint"></div>
+<main class="grid" id="grid"></main>
+<div class="foot" id="foot">
+  <span class="n" id="n"></span>
+  <button class="btn alt" id="clear"></button>
+  <button class="btn alt" id="web" hidden></button>
+  <button class="btn main" id="share"></button>
+</div>
+<div class="toast" id="toast"></div>
+<div class="busy" id="busy"></div>
+<script>
+"use strict";
+const API = "https://obgedilcyvaaewpvvdzi.supabase.co/functions/v1/shop";
+const T = {
+  en: { title: "My catalogue", sub: (n, s) => `${n} products${s ? " · " + s : ""}`, days: ["Today", "3 days", "7 days", "30 days"], search: "Search (kurti, saree, 599…)",
+    all: "All suppliers", hint: "Tick the products you want, then tap <b>Send on WhatsApp</b>. Each photo has your price and your number on it. For Status, use <b>Share</b> on one product and pick <b>My status</b>.",
+    share: "Send on WhatsApp", one: "Share", clear: "Clear", web: "Website", sel: (n) => `${n} ticked`, empty: "No products in this time. Try 7 days or 30 days.",
+    bad: "This link doesn't work. Send <b>catalogue</b> to the Resell Ready bot on WhatsApp for a new one.", fail: "Couldn't load. Check your internet and pull down to try again.",
+    wait: "Getting photos ready…", copied: "Caption copied. Paste it if WhatsApp doesn't show it.", max: "Up to 10 at a time, please.", sold: "Some products are sold out and were skipped.",
+    added: (n) => n ? `${n} added to your website.` : "Already on your website.", photos: (n) => `${n} photos`, nofile: "Your phone can't share photos from here. The text is copied and WhatsApp will open; save the photos by long-pressing them." },
+  hi: { title: "मेरा कैटलॉग", sub: (n, s) => `${n} प्रोडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिन", "7 दिन", "30 दिन"], search: "खोजें (कुर्ती, साड़ी, 599…)",
+    all: "सभी सप्लायर", hint: "जो प्रोडक्ट चाहिए उन पर टिक करें, फिर <b>WhatsApp पर भेजें</b> दबाएँ। हर फ़ोटो पर आपकी कीमत और आपका नंबर है। Status के लिए एक प्रोडक्ट पर <b>शेयर</b> दबाकर <b>My status</b> चुनें।",
+    share: "WhatsApp पर भेजें", one: "शेयर", clear: "हटाएँ", web: "वेबसाइट", sel: (n) => `${n} चुने`, empty: "इस समय में कोई प्रोडक्ट नहीं। 7 दिन या 30 दिन देखें।",
+    bad: "यह लिंक काम नहीं कर रहा। नया लिंक पाने के लिए WhatsApp पर Resell Ready बॉट को <b>catalogue</b> भेजें।", fail: "लोड नहीं हुआ। इंटरनेट देखें और फिर से खोलें।",
+    wait: "फ़ोटो तैयार हो रही हैं…", copied: "कैप्शन कॉपी हो गया। WhatsApp में न दिखे तो पेस्ट करें।", max: "एक बार में 10 तक।", sold: "कुछ प्रोडक्ट ख़त्म हो गए, उन्हें छोड़ दिया।",
+    added: (n) => n ? `${n} आपकी वेबसाइट पर लगाए।` : "पहले से आपकी वेबसाइट पर हैं।", photos: (n) => `${n} फ़ोटो`, nofile: "आपका फ़ोन यहाँ से फ़ोटो शेयर नहीं कर सकता। टेक्स्ट कॉपी हो गया है और WhatsApp खुलेगा; फ़ोटो को दबाकर सेव करें।" },
+  mr: { title: "माझा कॅटलॉग", sub: (n, s) => `${n} प्रॉडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिवस", "7 दिवस", "30 दिवस"], search: "शोधा (कुर्ती, साडी, 599…)",
+    all: "सगळे सप्लायर", hint: "हवे ते प्रॉडक्ट टिक करा, मग <b>WhatsApp वर पाठवा</b> दाबा. प्रत्येक फोटोवर तुमची किंमत आणि तुमचा नंबर आहे. Status साठी एका प्रॉडक्टवर <b>शेअर</b> दाबून <b>My status</b> निवडा.",
+    share: "WhatsApp वर पाठवा", one: "शेअर", clear: "काढा", web: "वेबसाइट", sel: (n) => `${n} निवडले`, empty: "या वेळेत प्रॉडक्ट नाहीत. 7 दिवस किंवा 30 दिवस पाहा.",
+    bad: "ही लिंक चालत नाही. नवी लिंक मिळवण्यासाठी WhatsApp वर Resell Ready बॉटला <b>catalogue</b> पाठवा.", fail: "लोड झालं नाही. इंटरनेट तपासा आणि पुन्हा उघडा.",
+    wait: "फोटो तयार होत आहेत…", copied: "कॅप्शन कॉपी झालं. WhatsApp मध्ये दिसलं नाही तर पेस्ट करा.", max: "एका वेळी 10 पर्यंत.", sold: "काही प्रॉडक्ट संपले, ते वगळले.",
+    added: (n) => n ? `${n} तुमच्या वेबसाइटवर लावले.` : "आधीच तुमच्या वेबसाइटवर आहेत.", photos: (n) => `${n} फोटो`, nofile: "तुमचा फोन इथून फोटो शेअर करू शकत नाही. टेक्स्ट कॉपी झालं आहे आणि WhatsApp उघडेल; फोटो दाबून ठेवून सेव्ह करा." },
+};
+const DAYS = [1, 3, 7, 30];
+const $ = (id) => document.getElementById(id);
+const tok = new URLSearchParams(location.search).get("c") || location.hash.slice(1);
+let L = T.en, data = null, days = 3;
+const picked = new Set();
+
+function toast(msg, ms = 2600) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), ms); }
+function busy(on) { $("busy").textContent = L.wait; $("busy").classList.toggle("show", on); }
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const rupees = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
+
+function labels() {
+  document.documentElement.lang = data?.lang || "en";
+  $("title").textContent = data?.shop ? `${L.title} · ${data.shop}` : L.title;
+  $("q").placeholder = L.search;
+  $("hint").innerHTML = L.hint;
+  $("share").textContent = L.share; $("clear").textContent = L.clear; $("web").textContent = L.web;
+  $("days").innerHTML = DAYS.map((d, i) => `<button class="chip${d === days ? " on" : ""}" data-d="${d}">${L.days[i]}</button>`).join("");
+}
+
+async function load() {
+  if (!tok) { $("grid").innerHTML = `<div class="err">${L.bad}</div>`; labels(); return; }
+  busy(true);
+  try {
+    const res = await fetch(`${API}?c=${encodeURIComponent(tok)}&days=${days}`);
+    if (res.status === 404) { $("grid").innerHTML = `<div class="err">${L.bad}</div>`; return; }
+    if (!res.ok) throw new Error(res.status);
+    data = await res.json();
+    L = T[data.lang] || T.en;
+    labels();
+    const sel = $("sup");
+    sel.hidden = !(data.suppliers?.length > 1);
+    if (!sel.hidden) {
+      const cur = sel.value;
+      sel.innerHTML = `<option value="">${L.all}</option>` + data.suppliers.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+      sel.value = cur;
+    }
+    $("web").hidden = !data.web;
+    render();
+  } catch (e) {
+    $("grid").innerHTML = `<div class="err">${L.fail}</div>`;
+  } finally { busy(false); }
+}
+
+function visible() {
+  const q = $("q").value.trim().toLowerCase(), s = $("sup").value;
+  return (data?.products || []).filter((p) => (!s || p.sid === s) && (!q || `${p.title} ${p.code} ${p.supplier || ""} ${p.price || ""} ${p.sizes.join(" ")}`.toLowerCase().includes(q)));
+}
+
+function render() {
+  const list = visible();
+  $("sub").textContent = L.sub(list.length, data?.suppliers?.length === 1 ? data.suppliers[0].name : "");
+  if (!list.length) { $("grid").innerHTML = `<div class="empty">${L.empty}</div>`; foot(); return; }
+  $("grid").innerHTML = list.map((p) => `
+    <div class="card${picked.has(p.key) ? " sel" : ""}" data-k="${p.key}">
+      <div class="pic" data-pick="${p.key}">
+        ${p.img ? `<img loading="lazy" src="${esc(p.img)}" alt="">` : ""}
+        <span class="tick">${picked.has(p.key) ? "✓" : ""}</span>
+        ${p.price ? `<span class="price">${rupees(p.price)}</span>` : ""}
+        ${p.photos > 1 ? `<span class="count">${L.photos(p.photos)}</span>` : ""}
+      </div>
+      <div class="meta"><b>${esc(p.title)}</b><small>${esc([p.code, p.sizes.slice(0, 4).join(" "), p.supplier].filter(Boolean).join(" · "))}</small>
+        <button class="one" data-one="${p.key}">${L.one}</button></div>
+    </div>`).join("");
+  foot();
+}
+
+function foot() {
+  $("foot").classList.toggle("show", picked.size > 0);
+  $("n").textContent = L.sel(picked.size);
+}
+
+async function fileFrom(url, name) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("photo");
+  const b = await r.blob();
+  return new File([b], name, { type: b.type || "image/jpeg" });
+}
+
+// Gets each product's stamped photo and caption, then opens the phone's share sheet (WhatsApp, Status…).
+async function share(keys) {
+  if (keys.length > 10) { toast(L.max); return; }
+  busy(true);
+  let items = [], skipped = 0;
+  try {
+    const got = await Promise.all(keys.map((k) => fetch(`${API}?c=${encodeURIComponent(tok)}&share=${k}`).then((r) => (r.ok ? r.json() : null)).catch(() => null)));
+    items = got.filter(Boolean);
+    skipped = keys.length - items.length;
+    if (!items.length) { toast(L.sold); return; }
+    const text = items.map((i) => i.text).join("\n\n— — —\n\n");
+    try { await navigator.clipboard.writeText(text); } catch { /* not allowed: fine */ }
+    const files = [];
+    for (const i of items) {
+      const m = i.media.find((x) => x.kind === "image" && x.url);
+      if (m) { try { files.push(await fileFrom(m.url, `${i.code}.jpg`)); } catch { /* skip this photo */ } }
+    }
+    busy(false);
+    if (files.length && navigator.canShare && navigator.canShare({ files })) {
+      try { await navigator.share({ files, text }); } catch (e) { if (e && e.name === "AbortError") return; throw e; }
+      toast(skipped ? L.sold : L.copied, 3500);
+    } else {
+      toast(L.nofile, 5000);
+      setTimeout(() => { location.href = `https://wa.me/?text=${encodeURIComponent(text)}`; }, 1200);
+    }
+  } catch (e) {
+    toast(L.fail);
+  } finally { busy(false); }
+}
+
+async function toWebsite() {
+  busy(true);
+  try {
+    const r = await fetch(`${API}?c=${encodeURIComponent(tok)}&web=${[...picked].join(",")}`, { method: "POST" });
+    const j = await r.json();
+    toast(L.added(j.added || 0));
+  } catch { toast(L.fail); } finally { busy(false); }
+}
+
+$("grid").addEventListener("click", (e) => {
+  const one = e.target.closest("[data-one]");
+  if (one) { share([Number(one.dataset.one)]); return; }
+  const pick = e.target.closest("[data-pick]");
+  if (!pick) return;
+  const k = Number(pick.dataset.pick);
+  if (picked.has(k)) picked.delete(k); else if (picked.size >= 10) { toast(L.max); return; } else picked.add(k);
+  const card = pick.closest(".card");
+  card.classList.toggle("sel", picked.has(k));
+  card.querySelector(".tick").textContent = picked.has(k) ? "✓" : "";
+  foot();
+});
+$("days").addEventListener("click", (e) => { const b = e.target.closest("[data-d]"); if (!b) return; days = Number(b.dataset.d); picked.clear(); load(); });
+$("q").addEventListener("input", render);
+$("sup").addEventListener("change", render);
+$("share").addEventListener("click", () => share([...picked]));
+$("clear").addEventListener("click", () => { picked.clear(); render(); });
+$("web").addEventListener("click", toWebsite);
+labels();
+load();
+</script>
+</body>
+</html>
