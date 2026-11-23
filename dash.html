@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="robots" content="noindex">
+<title>Dashboard · Resell Ready</title>
+<style>
+  :root { --ink:#111827; --ink2:#374151; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --brand-soft:#e6f4f1; --bg:#f6f7f8; --card:#fff;
+          --good:#15803d; --warn:#b45309; --bad:#b91c1c; --bar:#0f766e; --bar2:#5b6abf; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari",sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--brand); color:#fff; padding:14px 16px 12px; position:sticky; top:0; z-index:5; }
+  header h1 { margin:0; font-size:19px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  header p { margin:3px 0 0; font-size:13px; opacity:.9; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  header a { color:#fff; }
+  .live { display:inline-flex; align-items:center; gap:5px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:#86efac; box-shadow:0 0 0 0 rgba(134,239,172,.7); animation:pulse 2s infinite; }
+  .dot.off { background:#fca5a5; animation:none; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(134,239,172,.7)} 70%{box-shadow:0 0 0 7px rgba(134,239,172,0)} 100%{box-shadow:0 0 0 0 rgba(134,239,172,0)} }
+  .bar { display:flex; gap:8px; padding:10px 12px; background:#fff; border-bottom:1px solid var(--line); overflow-x:auto; }
+  .chip { flex:none; border:1px solid var(--line); background:#fff; border-radius:999px; padding:8px 14px; font-size:14px; color:var(--ink); cursor:pointer; }
+  .chip.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+  main { padding:12px; max-width:1100px; margin:0 auto; display:grid; gap:12px; }
+  .tiles { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  .two > * + * { margin-top:12px; }
+  @media (min-width:720px) { .two > * + * { margin-top:0; } .tiles { grid-template-columns:repeat(4,1fr); } .two { display:grid; grid-template-columns:1fr 1fr; gap:12px; } }
+  .tile, .box { background:var(--card); border-radius:12px; padding:12px 14px; border:1px solid var(--line); }
+  .tile small { color:var(--muted); font-size:12.5px; display:block; }
+  .tile b { font-size:24px; display:block; margin-top:4px; font-variant-numeric:tabular-nums; letter-spacing:-.3px; }
+  .tile span { font-size:12px; color:var(--muted); }
+  .box h2 { margin:0 0 10px; font-size:15px; }
+  .att { display:grid; gap:8px; }
+  .att div { display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:14px; padding:9px 10px; border-radius:9px; background:#f9fafb; }
+  .att div.hot { background:#fff7ed; }
+  .att div.hot b { color:var(--warn); }
+  .att b { font-variant-numeric:tabular-nums; font-size:15px; }
+  .att .ok { color:var(--muted); font-size:13.5px; background:none; padding:2px 0; }
+  .chart { position:relative; }
+  .chart svg { display:block; width:100%; height:auto; overflow:visible; }
+  .chart .tip { position:absolute; pointer-events:none; background:#111827; color:#fff; font-size:12.5px; padding:6px 8px; border-radius:7px; white-space:nowrap; transform:translate(-50%,-110%); display:none; }
+  .meter { height:10px; background:#eef0f2; border-radius:999px; overflow:hidden; margin-top:8px; }
+  .meter i { display:block; height:100%; background:var(--brand); border-radius:999px; }
+  .meter.w i { background:var(--warn); } .meter.d i { background:var(--bad); }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  td, th { padding:8px 4px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { color:var(--muted); font-weight:500; font-size:12px; }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  td small { color:var(--muted); display:block; font-size:12px; }
+  .pill { display:inline-block; font-size:11.5px; padding:2px 7px; border-radius:999px; background:#eef0f2; color:var(--ink2); white-space:nowrap; margin:1px 0; }
+  .pill.g { background:#dcfce7; color:#166534; } .pill.w { background:#ffedd5; color:#9a3412; } .pill.b { background:#fee2e2; color:#991b1b; } .pill.i { background:#e0e7ff; color:#3730a3; }
+  .funnel { display:flex; gap:6px; align-items:stretch; }
+  .funnel div { flex:1; background:#f9fafb; border-radius:9px; padding:8px; text-align:center; }
+  .funnel b { display:block; font-size:20px; font-variant-numeric:tabular-nums; }
+  .funnel small { color:var(--muted); font-size:12px; }
+  .funnel em { align-self:center; color:var(--muted); font-style:normal; }
+  .empty, .err { text-align:center; color:var(--muted); padding:48px 24px; font-size:15px; line-height:1.5; }
+  .muted { color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Dashboard</h1>
+  <p><span id="who"></span><span class="live"><i class="dot" id="dot"></i><span id="upd"></span></span><a id="cat" hidden></a></p>
+</header>
+<div class="bar" id="days"></div>
+<main id="main"><div class="empty" id="loading">…</div></main>
+
+<script>
+const API = "https://obgedilcyvaaewpvvdzi.supabase.co/functions/v1/shop";
+const qs = new URLSearchParams(location.search);
+const C = qs.get("c"), A = qs.get("a");
+const REFRESH = 20000;
+const DAYS = [1, 7, 30];
+let days = 7, data = null, lastAt = 0, timer = null, failed = false;
+try { days = Number(localStorage.getItem("rr_dash_days")) || 7; } catch {}
+
+const T = {
+  en: {
+    title: { reseller: "My dashboard", supplier: "Supplier dashboard", admin: "Admin dashboard" },
+    days: { 1: "Today", 7: "7 days", 30: "30 days" }, live: (s) => s < 5 ? "Live · just now" : `Live · ${s}s ago`, offline: "Offline · retrying",
+    cat: "Open catalogue →", rating: "Rating", newr: "New",
+    orders: "Orders", sales: "Sales", profit: "Your profit", customers: "Customers", revenue: "Your sales", resellers: "Resellers", photos: "Photos posted",
+    active: (n) => `${n} active`, cancelled: (n) => `${n} cancelled`, avg: (v) => `avg ${v}`,
+    attention: "Needs attention", allclear: "All clear. Nothing waiting on you.",
+    a_new: "New orders to send to supplier", a_with: "Waiting for supplier to accept", a_accept: "Orders to accept", a_dispatch: "Accepted, to dispatch",
+    a_way: "On the way", a_claim: "Customer says paid, check it", a_custdue: "UPI still to come from customers", a_cod: "Cash to collect on delivery",
+    a_supdue: "To pay your suppliers", a_suprecv: "To receive from resellers", a_supclaim: "Reseller says paid, check it", a_returns: "Return requests", a_joins: "Resellers waiting to join",
+    chart_orders: "Orders per day", chart_msgs: "WhatsApp messages sent per day",
+    funnel: "Shares to orders", shared: "Shared", taps: "Order taps", fo: "Orders",
+    top: "Top products", topres: "Top resellers", topsup: "Top suppliers", recent: "Latest orders", none: "No orders in this period yet.",
+    qty: "Qty", amount: "Amount",
+    st: { placed: "New", sent_to_supplier: "With supplier", accepted: "Accepted", dispatched: "On the way", delivered: "Delivered", cancelled: "Cancelled", out_of_stock: "Out of stock" },
+    pay: { paid: "Paid", unpaid: "Unpaid", claimed: "Check payment" }, cod: "COD", upi: "UPI", ret: "Return",
+    gmv: "Order value", income: "Your income (month)", msgs: "WhatsApp messages this month", capped: (n) => n ? `${n} held back by the limit` : "",
+    sup_active: "Suppliers", res_total: "Resellers", h_held: "Posts held for review", h_pend: "Suppliers waiting for approval", h_joins: "Reseller join requests",
+    h_capped: "Messages held back by the limit", h_err: "Failed WhatsApp sends", signups: "Latest sign-ups", kind: { supplier: "Supplier", reseller: "Reseller" },
+    bad: "This link doesn't work. Ask the bot for a new one by sending *catalogue*.", err: "Could not load. Retrying…",
+  },
+  hi: {
+    title: { reseller: "मेरा डैशबोर्ड", supplier: "सप्लायर डैशबोर्ड", admin: "एडमिन डैशबोर्ड" },
+    days: { 1: "आज", 7: "7 दिन", 30: "30 दिन" }, live: (s) => s < 5 ? "लाइव · अभी" : `लाइव · ${s} सेकंड पहले`, offline: "ऑफ़लाइन · फिर कोशिश",
+    cat: "कैटलॉग खोलें →", rating: "रेटिंग", newr: "नया",
+    orders: "ऑर्डर", sales: "बिक्री", profit: "आपका मुनाफ़ा", customers: "ग्राहक", revenue: "आपकी बिक्री", resellers: "रीसेलर", photos: "भेजी फ़ोटो",
+    active: (n) => `${n} सक्रिय`, cancelled: (n) => `${n} रद्द`, avg: (v) => `औसत ${v}`,
+    attention: "ध्यान दें", allclear: "सब ठीक है। कुछ बाकी नहीं।",
+    a_new: "नए ऑर्डर सप्लायर को भेजने हैं", a_with: "सप्लायर की मंज़ूरी बाकी", a_accept: "ऑर्डर मंज़ूर करने हैं", a_dispatch: "मंज़ूर, भेजना बाकी",
+    a_way: "रास्ते में", a_claim: "ग्राहक ने कहा पैसे भेजे, जाँचें", a_custdue: "ग्राहकों से UPI आना बाकी", a_cod: "डिलीवरी पर नकद लेना है",
+    a_supdue: "सप्लायर को देना है", a_suprecv: "रीसेलर से लेना है", a_supclaim: "रीसेलर ने कहा पैसे भेजे, जाँचें", a_returns: "रिटर्न अनुरोध", a_joins: "जुड़ने के लिए रुके रीसेलर",
+    chart_orders: "रोज़ के ऑर्डर", chart_msgs: "रोज़ भेजे WhatsApp संदेश",
+    funnel: "शेयर से ऑर्डर तक", shared: "शेयर", taps: "ऑर्डर टैप", fo: "ऑर्डर",
+    top: "सबसे ज़्यादा बिके", topres: "टॉप रीसेलर", topsup: "टॉप सप्लायर", recent: "ताज़ा ऑर्डर", none: "इस अवधि में अभी कोई ऑर्डर नहीं।",
+    qty: "संख्या", amount: "रकम",
+    st: { placed: "नया", sent_to_supplier: "सप्लायर के पास", accepted: "मंज़ूर", dispatched: "रास्ते में", delivered: "डिलीवर", cancelled: "रद्द", out_of_stock: "स्टॉक ख़त्म" },
+    pay: { paid: "भुगतान हुआ", unpaid: "बाकी", claimed: "भुगतान जाँचें" }, cod: "COD", upi: "UPI", ret: "रिटर्न",
+    bad: "यह लिंक काम नहीं कर रहा। बॉट को *catalogue* भेजकर नया लिंक लें।", err: "लोड नहीं हुआ। फिर कोशिश…",
+  },
+  mr: {
+    title: { reseller: "माझा डॅशबोर्ड", supplier: "सप्लायर डॅशबोर्ड", admin: "ॲडमिन डॅशबोर्ड" },
+    days: { 1: "आज", 7: "7 दिवस", 30: "30 दिवस" }, live: (s) => s < 5 ? "लाइव्ह · आत्ता" : `लाइव्ह · ${s} सेकंदांपूर्वी`, offline: "ऑफलाइन · पुन्हा प्रयत्न",
+    cat: "कॅटलॉग उघडा →", rating: "रेटिंग", newr: "नवीन",
+    orders: "ऑर्डर", sales: "विक्री", profit: "तुमचा नफा", customers: "ग्राहक", revenue: "तुमची विक्री", resellers: "रीसेलर", photos: "पाठवलेले फोटो",
+    active: (n) => `${n} सक्रिय`, cancelled: (n) => `${n} रद्द`, avg: (v) => `सरासरी ${v}`,
+    attention: "लक्ष द्या", allclear: "सगळं ठीक आहे. काही बाकी नाही.",
+    a_new: "नवे ऑर्डर सप्लायरला पाठवायचे", a_with: "सप्लायरची मंजुरी बाकी", a_accept: "ऑर्डर मंजूर करायचे", a_dispatch: "मंजूर, पाठवायचे बाकी",
+    a_way: "वाटेत", a_claim: "ग्राहक म्हणतो पैसे पाठवले, तपासा", a_custdue: "ग्राहकांकडून UPI येणे बाकी", a_cod: "डिलिव्हरीवर रोख घ्यायची",
+    a_supdue: "सप्लायरला द्यायचे", a_suprecv: "रीसेलरकडून घ्यायचे", a_supclaim: "रीसेलर म्हणतो पैसे पाठवले, तपासा", a_returns: "रिटर्न विनंत्या", a_joins: "जोडण्यासाठी थांबलेले रीसेलर",
+    chart_orders: "रोजचे ऑर्डर", chart_msgs: "रोज पाठवलेले WhatsApp मेसेज",
+    funnel: "शेअर ते ऑर्डर", shared: "शेअर", taps: "ऑर्डर टॅप", fo: "ऑर्डर",
+    top: "सर्वाधिक विकले", topres: "टॉप रीसेलर", topsup: "टॉप सप्लायर", recent: "ताजे ऑर्डर", none: "या काळात अजून ऑर्डर नाहीत.",
+    qty: "संख्या", amount: "रक्कम",
+    st: { placed: "नवा", sent_to_supplier: "सप्लायरकडे", accepted: "मंजूर", dispatched: "वाटेत", delivered: "डिलिव्हर", cancelled: "रद्द", out_of_stock: "स्टॉक संपला" },
+    pay: { paid: "पैसे मिळाले", unpaid: "बाकी", claimed: "पैसे तपासा" }, cod: "COD", upi: "UPI", ret: "रिटर्न",
+    bad: "ही लिंक चालत नाही. बॉटला *catalogue* पाठवून नवी लिंक घ्या.", err: "लोड झालं नाही. पुन्हा प्रयत्न…",
+  },
+};
+let L = T.en;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const num = (n) => Number(n || 0).toLocaleString("en-IN");
+const rs = (n) => "₹" + Math.round(Number(n || 0)).toLocaleString("en-IN");
+const ago = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 60 ? `${Math.max(m, 0)}m` : m < 1440 ? `${Math.round(m / 60)}h` : new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" }); };
+
+function tile(label, value, sub = "") { return `<div class="tile"><small>${esc(label)}</small><b>${value}</b>${sub ? `<span>${sub}</span>` : ""}</div>`; }
+function attention(rows) {
+  const on = rows.filter((r) => Number(r[1]) > 0);
+  return `<div class="box"><h2>${L.attention}</h2><div class="att">${on.length ? on.map(([label, v, money, hot]) =>
+    `<div class="${hot ? "hot" : ""}"><span>${esc(label)}</span><b>${money ? rs(v) : num(v)}</b></div>`).join("") : `<div class="ok">✅ ${L.allclear}</div>`}</div></div>`;
+}
+
+// Single-series bar chart: one hue, rounded tops on the baseline, 2px gaps, hover/tap tooltip.
+function barChart(id, title, series, key, fmt, color, half = false) {
+  // draw at the real on-screen width so text stays 11–12px on phones and desktops alike
+  const inner = Math.min(1100, document.documentElement.clientWidth) - 24 - 30;
+  const W = Math.max(280, Math.round(half && innerWidth >= 720 ? (inner - 12) / 2 : inner)), H = 170, pl = 30, pb = 22, pt = 8;
+  const n = series.length, max = Math.max(1, ...series.map((s) => Number(s[key]) || 0));
+  const step = Math.pow(10, Math.floor(Math.log10(max)));
+  let top = Math.ceil(max / step) * step; if (top % 2) top += step;
+  const bw = (W - pl) / n, gap = Math.min(6, bw * 0.25);
+  const y = (v) => pt + (H - pt - pb) * (1 - v / top);
+  const every = Math.ceil(n / 8);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">`;
+  for (const t of [0, top / 2, top]) s += `<line x1="${pl}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="#e5e7eb"/><text x="${pl - 6}" y="${y(t) + 4}" font-size="11" fill="#6b7280" text-anchor="end">${t >= 1000 ? Math.round(t / 1000) + "k" : Math.round(t)}</text>`;
+  series.forEach((d, i) => {
+    const v = Number(d[key]) || 0, x = pl + i * bw + gap / 2, w = bw - gap, h = (H - pt - pb) * (v / top), r = Math.min(4, w / 2, h);
+    if (v > 0) s += `<path d="M${x},${y(0)} V${y(v) + r} Q${x},${y(v)} ${x + r},${y(v)} H${x + w - r} Q${x + w},${y(v)} ${x + w},${y(v) + r} V${y(0)} Z" fill="${color}"/>`;
+    s += `<rect class="hit" data-i="${i}" x="${pl + i * bw}" y="${pt}" width="${bw}" height="${H - pt - pb}" fill="transparent"/>`;
+    if (i % every === 0 || i === n - 1) s += `<text x="${pl + i * bw + bw / 2}" y="${H - 6}" font-size="11" fill="#6b7280" text-anchor="middle">${esc(n === 1 ? d.d : String(parseInt(d.d)))}</text>`;
+  });
+  s += `</svg>`;
+  return `<div class="box"><h2>${esc(title)}</h2><div class="chart" id="${id}" data-key="${key}">${s}<div class="tip"></div></div></div>`;
+}
+function wireCharts() {
+  document.querySelectorAll(".chart").forEach((el) => {
+    const tip = el.querySelector(".tip"), key = el.dataset.key;
+    const show = (e) => {
+      const r = e.target.closest(".hit"); if (!r) { tip.style.display = "none"; return; }
+      const d = data.series[+r.dataset.i], box = el.getBoundingClientRect(), rb = r.getBoundingClientRect();
+      tip.innerHTML = `<b>${esc(d.d)}</b> · ${key === "messages" ? num(d.messages) : `${num(d.orders)} ${L.orders.toLowerCase()} · ${rs(d.sales)}`}`;
+      tip.style.left = `${rb.left - box.left + rb.width / 2}px`; tip.style.top = `${rb.top - box.top + 10}px`; tip.style.display = "block";
+    };
+    el.addEventListener("pointermove", show); el.addEventListener("pointerdown", show);
+    el.addEventListener("pointerleave", () => (tip.style.display = "none"));
+  });
+}
+
+function pills(o) {
+  const st = o.status, cls = st === "delivered" ? "g" : st === "dispatched" ? "i" : ["cancelled", "out_of_stock"].includes(st) ? "b" : st === "placed" ? "w" : "";
+  let p = `<span class="pill ${cls}">${esc(L.st[st] || st)}</span> `;
+  p += `<span class="pill ${o.pay_status === "paid" ? "g" : o.pay_status === "claimed" ? "w" : ""}">${o.pay_method === "cod" ? L.cod : L.upi} · ${esc(L.pay[o.pay_status] || o.pay_status || "")}</span>`;
+  if (o.return_status) p += ` <span class="pill b">${L.ret}: ${esc(o.return_status)}</span>`;
+  return p;
+}
+function recent(list, role) {
+  if (!list.length) return `<div class="box"><h2>${L.recent}</h2><p class="muted">${L.none}</p></div>`;
+  return `<div class="box"><h2>${L.recent}</h2><table><tr><th>#</th><th></th><th class="n">${L.amount}</th></tr>${list.map((o) => `<tr>
+    <td>${o.id}<small>${ago(o.placed_at)}</small></td>
+    <td>${esc(o.title || o.code)}${o.size ? ` · ${esc(o.size)}` : ""} × ${o.qty}<small>${esc(o.code)} · ${esc(role === "supplier" ? (o.reseller || "") : (o.customer || ""))}</small>${pills(o)}</td>
+    <td class="n">${rs(o.amount)}</td></tr>`).join("")}</table></div>`;
+}
+function topList(title, rows, label, value) {
+  if (!rows?.length) return "";
+  return `<div class="box"><h2>${title}</h2><table>${rows.map((r, i) => `<tr><td>${i + 1}. ${label(r)}</td><td class="n">${value(r)}</td></tr>`).join("")}</table></div>`;
+}
+function funnel(d) {
+  return `<div class="box"><h2>${L.funnel}</h2><div class="funnel"><div><b>${num(d.shared)}</b><small>${L.shared}</small></div><em>›</em><div><b>${num(d.taps)}</b><small>${L.taps}</small></div><em>›</em><div><b>${num(d.orders)}</b><small>${L.fo}</small></div></div></div>`;
+}
+
+function renderReseller(d) {
+  const p = d.pipeline, m = d.money;
+  return `<div class="tiles">
+      ${tile(L.orders, num(d.orders), d.cancelled ? L.cancelled(d.cancelled) : "")}
+      ${tile(L.sales, rs(d.sales), d.orders ? L.avg(rs(d.sales / d.orders)) : "")}
+      ${tile(L.profit, rs(d.profit))}
+      ${tile(L.customers, num(d.customers))}</div>
+    ${attention([[L.a_new, p.new, 0, 1], [L.a_claim, m.cust_claimed, 0, 1], [L.a_supdue, m.sup_due, 1, 1], [L.a_returns, d.returns_open, 0, 1],
+      [L.a_with, p.with_supplier], [L.a_way, p.on_the_way], [L.a_custdue, m.cust_unpaid, 1], [L.a_cod, m.cod_open, 1]])}
+    ${barChart("c1", L.chart_orders, d.series, "orders", num, "var(--bar)")}
+    <div class="two">${funnel(d)}${topList(L.top, d.top_products, (r) => `${esc(r.title || r.code)}<small>${esc(r.code)}</small>`, (r) => num(r.orders))}</div>
+    ${recent(d.recent, "reseller")}`;
+}
+function renderSupplier(d) {
+  const p = d.pipeline, m = d.money;
+  return `<div class="tiles">
+      ${tile(L.orders, num(d.orders), d.cancelled ? L.cancelled(d.cancelled) : "")}
+      ${tile(L.revenue, rs(d.supplier_value))}
+      ${tile(L.resellers, num(d.resellers), L.active(d.active_resellers))}
+      ${tile(L.photos, num(d.photos))}</div>
+    ${attention([[L.a_accept, p.with_supplier, 0, 1], [L.a_dispatch, p.accepted, 0, 1], [L.a_supclaim, m.sup_claimed, 0, 1], [L.a_joins, d.pending_resellers, 0, 1],
+      [L.a_returns, d.returns_open, 0, 1], [L.a_way, p.on_the_way], [L.a_suprecv, m.sup_due, 1]])}
+    ${barChart("c1", L.chart_orders, d.series, "orders", num, "var(--bar)")}
+    <div class="two">${topList(L.top, d.top_products, (r) => `${esc(r.title || r.code)}<small>${esc(r.code)}</small>`, (r) => num(r.orders))}
+      ${topList(L.topres, d.top_resellers, (r) => esc(r.name), (r) => `${num(r.orders)} · ${rs(r.value)}`)}</div>
+    ${funnel(d)}
+    ${recent(d.recent, "supplier")}`;
+}
+function renderAdmin(d) {
+  const ms = d.messages, share = ms.month_sent / ms.cap;
+  return `<div class="tiles">
+      ${tile(L.orders, num(d.orders), `${num(d.customers)} ${L.customers.toLowerCase()}`)}
+      ${tile(L.gmv, rs(d.gmv))}
+      ${tile(L.sup_active, num(d.suppliers.active), `+${d.suppliers.new} new · ${d.suppliers.pending} pending`)}
+      ${tile(L.res_total, num(d.resellers.total), `${L.active(d.resellers.active)} · +${d.resellers.new} new`)}</div>
+    <div class="two">
+      <div class="box"><h2>${L.msgs}</h2><b style="font-size:24px">${num(ms.month_sent)}</b> <span class="muted">/ ${num(ms.cap)}</span>
+        <div class="meter ${share >= .95 ? "d" : share >= .8 ? "w" : ""}"><i style="width:${Math.min(100, share * 100).toFixed(1)}%"></i></div>
+        <p class="muted">${Math.round(share * 100)}% · ${num(ms.inbound_people)} people wrote to the bot ${days === 1 ? "today" : `in ${days} days`}${ms.capped ? ` · ${L.capped(ms.capped)}` : ""}</p></div>
+      ${tile(L.income, rs(d.income.month), `${rs(d.income.period)} ${days === 1 ? "today" : `in ${days} days`}`)}</div>
+    ${attention([[L.h_held, d.held_posts, 0, 1], [L.h_pend, d.suppliers.pending, 0, 1], [L.h_joins, d.resellers.pending_joins, 0, 1],
+      [L.h_capped, ms.capped, 0, 1], [L.h_err, ms.errors, 0, 1]])}
+    <div class="two">${barChart("c1", L.chart_orders, d.series, "orders", num, "var(--bar)", true)}${barChart("c2", L.chart_msgs, d.series, "messages", num, "var(--bar2)", true)}</div>
+    <div class="two">${topList(L.topsup, d.top_suppliers, (r) => `${esc(r.name)}<small>${esc(r.code || "")}</small>`, (r) => `${num(r.orders)} · ${rs(r.gmv)}`)}
+      ${topList(L.topres, d.top_resellers, (r) => esc(r.name), (r) => `${num(r.orders)} · ${rs(r.gmv)}`)}</div>
+    ${funnel(d)}
+    ${topList(L.signups, d.signups, (r) => `${esc(r.name)}<small>${L.kind[r.kind]} · ${esc(r.status || "")}</small>`, (r) => ago(r.created_at))}`;
+}
+
+function render() {
+  const d = data;
+  L = { ...T.en, ...(T[d.lang] || {}) };
+  document.documentElement.lang = d.lang || "en";
+  $("title").textContent = L.title[d.role] + (d.name && d.role !== "admin" ? ` · ${d.name}` : "");
+  const rt = d.rating;
+  $("who").textContent = rt ? `${L.rating}: ${rt.stars ? "★" + Number(rt.stars).toFixed(1) : L.newr}` : "";
+  if (C) { $("cat").hidden = false; $("cat").href = `./?c=${encodeURIComponent(C)}`; $("cat").textContent = L.cat; }
+  $("days").innerHTML = DAYS.map((n) => `<button class="chip ${n === days ? "on" : ""}" data-d="${n}">${L.days[n]}</button>`).join("");
+  $("main").innerHTML = d.role === "admin" ? renderAdmin(d) : d.role === "supplier" ? renderSupplier(d) : renderReseller(d);
+  wireCharts();
+  tick();
+}
+function tick() {
+  if (!lastAt) return;
+  const s = Math.round((Date.now() - lastAt) / 1000);
+  $("dot").classList.toggle("off", failed);
+  $("upd").textContent = failed ? L.offline : L.live(s);
+}
+
+async function load() {
+  clearTimeout(timer);
+  if (!C && !A) { $("main").innerHTML = `<div class="err">${T.en.bad}</div>`; return; }
+  try {
+    const u = `${API}?${A ? `a=${encodeURIComponent(A)}` : `c=${encodeURIComponent(C)}`}&dash=1&days=${days}`;
+    const res = await fetch(u, { cache: "no-store" });
+    if (res.status === 404) { $("main").innerHTML = `<div class="err">${(T[data?.lang] || T.en).bad}</div>`; return; }
+    if (!res.ok) throw new Error(res.status);
+    data = await res.json(); lastAt = Date.now(); failed = false;
+    render();
+  } catch {
+    failed = true; tick();
+    if (!data) $("main").innerHTML = `<div class="err">${T.en.err}</div>`;
+  }
+  if (!document.hidden) timer = setTimeout(load, failed ? 8000 : REFRESH);
+}
+$("days").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-d]"); if (!b) return;
+  days = +b.dataset.d; try { localStorage.setItem("rr_dash_days", days); } catch {}
+  load();
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); else clearTimeout(timer); });
+setInterval(tick, 1000);
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => data && render(), 200); });
+load();
+</script>
+</body>
+</html>
