@@ -35,8 +35,15 @@
   .btns { display:flex; gap:6px; }
   .btns .one { flex:1; }
   .viewer { position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:50; display:flex; align-items:center; justify-content:center; }
-  .viewer video { max-width:100%; max-height:100%; }
-  .viewer button { position:absolute; top:12px; right:12px; background:#fff; border:0; border-radius:999px; padding:8px 14px; font-size:15px; }
+  .ready { position:fixed; left:12px; right:12px; bottom:84px; z-index:20; display:flex; gap:8px; }
+  .ready .go { flex:1; background:var(--brand); color:#fff; border:0; border-radius:12px; padding:14px; font-size:16px; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,.2); }
+  .ready .x { background:#fff; border:1px solid var(--line); border-radius:12px; padding:0 16px; font-size:16px; }
+  .viewer { flex-direction:column; gap:12px; padding:56px 8px 20px; }
+  .viewer .vwrap { flex:1; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; }
+  .viewer video { max-width:100%; max-height:100%; width:100%; background:#000; }
+  .viewer .vclose { position:absolute; top:12px; right:12px; background:#fff; border:0; border-radius:999px; padding:8px 14px; font-size:15px; }
+  .viewer .vmsg { color:#fecaca; font-size:14px; text-align:center; margin:0 16px; }
+  .viewer .vopen { color:#fff; font-size:15px; border:1px solid rgba(255,255,255,.6); border-radius:999px; padding:9px 16px; text-decoration:none; }
   .price { position:absolute; right:6px; top:6px; background:var(--red); color:#fff; font-weight:700; font-size:14px; padding:3px 8px; border-radius:8px; }
   .tick { position:absolute; left:6px; top:6px; width:28px; height:28px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,.25); display:grid; place-items:center; color:#fff; font-weight:700; }
   .card.sel .tick { background:var(--brand); }
@@ -85,6 +92,8 @@
 const API = "https://obgedilcyvaaewpvvdzi.supabase.co/functions/v1/shop";
 const T = {
   en: { title: "My catalogue", sub: (n, s) => `${n} products${s ? " · " + s : ""}`, days: ["Today", "3 days", "7 days", "30 days"], search: "Search (kurti, saree, 599…)",
+    tapShare: "Ready. Tap to share",
+    vopen: "Open in phone’s video player ↗", vfail: "This browser couldn’t play the video. Tap the button below to open it in your phone’s player.",
     code: "Code", codeAsk: "Your joining code (2–6 letters or numbers). Resellers join with JOIN + this code, and your product numbers start with it. Links you shared with the old code will stop working.", codeSet: (c) => `Code changed to ${c}. Share your new joining link.`, codeBad: "That code is taken or not allowed. Try another (2–6 letters).",
     rename: "Name", renameAsk: "Your business name, as customers and resellers should see it:", renamed: "Name saved.", renameBad: "That name can't be used. Use 2–40 letters.",
     addp: "＋ Add products", inv: "👥 Invite resellers", logo: "Logo", logoSet: "Logo saved. New photos will carry it.", logoFail: "Could not save the logo. Try again.",
@@ -95,6 +104,8 @@ const T = {
     added: (n) => n ? `${n} added to your website.` : "Already on your website.", photos: (n) => `${n} photos`, vids: (n) => `▶ ${n} video${n > 1 ? "s" : ""}`, vbtn: "▶ Video", close: "Close", bigvid: "This video is large and may take a while to download.",
     newest: "Newest", popular: "Most ordered", ordered: (n) => `${n} ordered`, noprice: "Price not given", newr: "New", you: "Your rating", more: "more", nofile: "Your phone can't share photos from here. The text is copied and WhatsApp will open; save the photos by long-pressing them." },
   hi: { title: "मेरा कैटलॉग", sub: (n, s) => `${n} प्रोडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिन", "7 दिन", "30 दिन"], search: "खोजें (कुर्ती, साड़ी, 599…)",
+    tapShare: "तैयार है। शेयर करने के लिए टैप करें",
+    vopen: "फ़ोन के वीडियो प्लेयर में खोलें ↗", vfail: "यह ब्राउज़र वीडियो नहीं चला पाया। नीचे के बटन से फ़ोन के प्लेयर में खोलें।",
     code: "कोड", codeAsk: "आपका जुड़ने का कोड (2–6 अक्षर या अंक)। रीसेलर JOIN + यह कोड भेजकर जुड़ते हैं, और प्रोडक्ट नंबर इसी से शुरू होते हैं। पुराने कोड वाले लिंक काम करना बंद कर देंगे।", codeSet: (c) => `कोड ${c} हो गया। अपना नया जुड़ने का लिंक शेयर करें।`, codeBad: "यह कोड पहले से लिया है या नहीं चल सकता। दूसरा आज़माएँ (2–6 अक्षर)।",
     rename: "नाम", renameAsk: "आपके बिज़नेस का नाम, जैसा ग्राहक और रीसेलर देखें:", renamed: "नाम सेव हो गया।", renameBad: "यह नाम नहीं चल सकता। 2–40 अक्षर रखें।",
     addp: "＋ प्रोडक्ट जोड़ें", inv: "👥 रीसेलर बुलाएँ", logo: "लोगो", logoSet: "लोगो सेव हो गया। नई फ़ोटो पर दिखेगा।", logoFail: "लोगो सेव नहीं हुआ। फिर कोशिश करें।",
@@ -105,6 +116,8 @@ const T = {
     added: (n) => n ? `${n} आपकी वेबसाइट पर लगाए।` : "पहले से आपकी वेबसाइट पर हैं।", photos: (n) => `${n} फ़ोटो`, vids: (n) => `▶ ${n} वीडियो`, vbtn: "▶ वीडियो", close: "बंद करें", bigvid: "यह वीडियो बड़ा है, डाउनलोड में समय लग सकता है।",
     newest: "नए पहले", popular: "सबसे ज़्यादा ऑर्डर", ordered: (n) => `${n} ऑर्डर`, noprice: "कीमत नहीं दी", newr: "नया", you: "आपकी रेटिंग", more: "और", nofile: "आपका फ़ोन यहाँ से फ़ोटो शेयर नहीं कर सकता। टेक्स्ट कॉपी हो गया है और WhatsApp खुलेगा; फ़ोटो को दबाकर सेव करें।" },
   mr: { title: "माझा कॅटलॉग", sub: (n, s) => `${n} प्रॉडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिवस", "7 दिवस", "30 दिवस"], search: "शोधा (कुर्ती, साडी, 599…)",
+    tapShare: "तयार आहे. शेअर करण्यासाठी टॅप करा",
+    vopen: "फोनच्या व्हिडिओ प्लेयरमध्ये उघडा ↗", vfail: "हा ब्राउझर व्हिडिओ चालवू शकला नाही. खालच्या बटणाने फोनच्या प्लेयरमध्ये उघडा.",
     code: "कोड", codeAsk: "तुमचा जोडण्याचा कोड (2–6 अक्षरे किंवा अंक). रीसेलर JOIN + हा कोड पाठवून जोडतात, आणि प्रॉडक्ट नंबर यानेच सुरू होतात. जुन्या कोडच्या लिंक चालणं बंद होईल.", codeSet: (c) => `कोड ${c} झाला. तुमची नवी जोडण्याची लिंक शेअर करा.`, codeBad: "हा कोड आधीच घेतला आहे किंवा चालणार नाही. दुसरा वापरा (2–6 अक्षरे).",
     rename: "नाव", renameAsk: "तुमच्या व्यवसायाचं नाव, जसं ग्राहक आणि रीसेलरना दिसावं:", renamed: "नाव सेव्ह झालं.", renameBad: "हे नाव चालणार नाही. 2–40 अक्षरे ठेवा.",
     addp: "＋ प्रॉडक्ट जोडा", inv: "👥 रीसेलर बोलवा", logo: "लोगो", logoSet: "लोगो सेव्ह झाला. नव्या फोटोंवर दिसेल.", logoFail: "लोगो सेव्ह झाला नाही. पुन्हा प्रयत्न करा.",
@@ -233,7 +246,13 @@ async function share(keys, videoOnly = false) {
     }
     busy(false);
     if (files.length && navigator.canShare && navigator.canShare({ files })) {
-      try { await navigator.share({ files, text }); } catch (e) { if (e && e.name === "AbortError") return; throw e; }
+      try { await navigator.share({ files, text }); }
+      catch (e) {
+        if (e && e.name === "AbortError") return;
+        // iPhone: preparing big files (videos) takes too long after the tap, so ask for one more tap to share
+        if (e && e.name === "NotAllowedError") { readyToShare({ files, text }); return; }
+        throw e;
+      }
       toast(skipped ? L.sold : L.copied, 3500);
     } else {
       toast(L.nofile, 5000);
@@ -244,12 +263,38 @@ async function share(keys, videoOnly = false) {
   } finally { busy(false); }
 }
 
+// iPhone Safari only plays sound-on video when play() runs inside the tap itself, so start it here
+// (no autoplay attribute). If the phone still can't play it, offer its own player via a plain link.
 function openVideo(url) {
   const v = document.createElement("div");
   v.className = "viewer";
-  v.innerHTML = `<video src="${esc(url)}" controls autoplay playsinline></video><button>${L.close}</button>`;
-  v.querySelector("button").onclick = () => v.remove();
+  v.innerHTML = `<button class="vclose">${L.close}</button><div class="vwrap"></div>
+    <p class="vmsg" hidden></p><a class="vopen" href="${esc(url)}" target="_blank" rel="noopener">${L.vopen}</a>`;
+  const vid = document.createElement("video");
+  vid.controls = true; vid.playsInline = true; vid.preload = "auto";
+  vid.setAttribute("playsinline", ""); vid.setAttribute("webkit-playsinline", "");
+  vid.src = url;
+  v.querySelector(".vwrap").appendChild(vid);
+  v.querySelector(".vclose").onclick = () => { vid.pause(); vid.removeAttribute("src"); vid.load(); v.remove(); };
+  vid.addEventListener("error", () => {
+    const m = v.querySelector(".vmsg");
+    m.hidden = false; m.textContent = L.vfail + (vid.error ? ` (${vid.error.code})` : "");
+  });
   document.body.appendChild(v);
+  const p = vid.play();
+  if (p && p.catch) p.catch(() => { vid.muted = true; vid.play().catch(() => null); });
+}
+
+function readyToShare(payload) {
+  const b = document.createElement("div");
+  b.className = "ready";
+  b.innerHTML = `<button class="go">📤 ${L.tapShare}</button><button class="x">✕</button>`;
+  b.querySelector(".x").onclick = () => b.remove();
+  b.querySelector(".go").onclick = async () => {
+    b.remove();
+    try { await navigator.share(payload); toast(L.copied, 3500); } catch (e) { if (!e || e.name !== "AbortError") toast(L.fail); }
+  };
+  document.body.appendChild(b);
 }
 
 async function toWebsite() {
