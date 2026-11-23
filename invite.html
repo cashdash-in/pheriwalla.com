@@ -76,6 +76,18 @@ const T = {
     st: { joined: "जोडले ✓", pending: "तुमची मंजुरी बाकी", sent: "बोलावले", new: "अजून बोलावले नाही", rejected: "नाकारले" },
     hello: (n) => n ? `नमस्कार ${n},\n\n` : "", bad: "ही लिंक चालत नाही. बॉटला *catalogue* पाठवा.", onlySup: "फक्त सप्लायर रीसेलर बोलवू शकतात.", fail: "काहीतरी चुकलं. पुन्हा प्रयत्न करा." },
 };
+T.admin = { ...T.en, h: "Invite suppliers", back: "← Admin dashboard", sJ: "Approved",
+  hint: "Add the suppliers you want on Resell Ready. Each one gets <b>their own start link</b> in a WhatsApp message from your phone, one tap each. When they tap it they apply as a supplier, already marked as invited by you, and you approve them in the bot.",
+  listH: "Suppliers you invited", st: { joined: "Approved ✓", pending: "Applied: approve in the bot", sent: "Invited", new: "Not invited yet", rejected: "Declined" },
+  allSent: "Every supplier has been invited 🎉", left: (n) => `${n} still to invite`, onlySup: "" };
+const A = new URLSearchParams(location.search).get("a");
+async function api(act, body) {
+  if (!A) return RR.call(act, body);
+  const name = act === "invites" ? "supinvites" : act === "sent" ? "supsent" : act;
+  const r = await fetch(`${RR.API}?a=${encodeURIComponent(A)}&act=${name}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  if (!r.ok) throw new Error("failed");
+  return r.json();
+}
 let L = T.en, data = null;
 const $ = (id) => document.getElementById(id);
 const esc = RR.esc;
@@ -106,7 +118,7 @@ function render() {
 async function addContacts(list) {
   if (!list.length) return;
   try {
-    data = await RR.call("invites", { contacts: list });
+    data = await api("invites", { contacts: list });
     render(); toast(L.added(data.added, data.skipped), 4000);
   } catch { toast(L.fail); }
 }
@@ -114,8 +126,9 @@ async function addContacts(list) {
 // One tap opens WhatsApp with this person's own invite ready to send.
 function invite(phone) {
   const c = (data?.contacts || []).find((x) => x.phone === phone);
-  const text = L.hello(c?.name?.split(" ")[0]) + data.invite;
-  RR.call("sent", { phone }).catch(() => null);
+  const first = c?.name?.split(" ")[0];
+  const text = A ? data.template.replace("{NAME}", first ? ` ${first}` : "").replace("{LINK}", c.link) : L.hello(first) + data.invite;
+  api("sent", { phone }).catch(() => null);
   if (c) c.sent_at = c.sent_at || new Date().toISOString();
   render();
   location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
@@ -166,7 +179,12 @@ $("fFile").addEventListener("change", async (e) => {
 });
 
 (async () => {
-  $("back").href = `./?c=${encodeURIComponent(RR.tok)}`;
+  $("back").href = A ? `dash.html?a=${encodeURIComponent(A)}` : `./?c=${encodeURIComponent(RR.tok)}`;
+  if (A) {
+    L = T.admin; tr(); $("shop").textContent = "Resell Ready admin"; document.title = "Invite suppliers · Resell Ready";
+    try { data = await api("invites", { contacts: [] }); render(); } catch { $("main").innerHTML = `<div class="empty">This admin link doesn't work.</div>`; $("next").hidden = true; }
+    return;
+  }
   try {
     const d = await RR.info();
     L = { ...T.en, ...(T[d.lang] || {}) };
@@ -174,11 +192,11 @@ $("fFile").addEventListener("change", async (e) => {
     $("shop").textContent = d.shop || "";
     tr();
     if (d.role !== "supplier") { $("main").innerHTML = `<div class="empty">${L.onlySup}</div>`; $("next").hidden = true; return; }
-    data = await RR.call("invites", { contacts: [] });
+    data = await api("invites", { contacts: [] });
     render();
   } catch { tr(); $("main").innerHTML = `<div class="empty">${L.bad}</div>`; $("next").hidden = true; }
 })();
-document.addEventListener("visibilitychange", async () => { if (!document.hidden && data) { try { data = await RR.call("invites", { contacts: [] }); render(); } catch {} } });
+document.addEventListener("visibilitychange", async () => { if (!document.hidden && data) { try { data = await api("invites", { contacts: [] }); render(); } catch {} } });
 </script>
 </body>
 </html>

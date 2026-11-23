@@ -263,6 +263,7 @@ function render() {
   $("title").textContent = L.title[d.role] + (d.name && d.role !== "admin" ? ` · ${d.name}` : "");
   const rt = d.rating;
   $("who").textContent = rt ? `${L.rating}: ${rt.stars ? "★" + Number(rt.stars).toFixed(1) : L.newr}` : "";
+  if (A) { $("cat").hidden = false; $("cat").href = `invite.html?a=${encodeURIComponent(A)}`; $("cat").textContent = "📨 Invite suppliers →"; }
   if (C) { $("cat").hidden = false; $("cat").href = `./?c=${encodeURIComponent(C)}`; $("cat").textContent = L.cat; }
   $("days").innerHTML = DAYS.map((n) => `<button class="chip ${n === days ? "on" : ""}" data-d="${n}">${L.days[n]}</button>`).join("");
   $("main").innerHTML = d.role === "admin" ? renderAdmin(d) : d.role === "supplier" ? renderSupplier(d) : renderReseller(d);
