@@ -27,7 +27,13 @@
   .card { background:#fff; border-radius:12px; overflow:hidden; border:2px solid transparent; position:relative; }
   .card.sel { border-color:var(--brand); }
   .pic { position:relative; aspect-ratio:4/5; background:#eef0f2; }
-  .pic img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pic img, .pic video { width:100%; height:100%; object-fit:cover; display:block; }
+  .play { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:52px; height:52px; border-radius:50%; border:0; background:rgba(0,0,0,.55); color:#fff; font-size:22px; padding-left:4px; }
+  .btns { display:flex; gap:6px; }
+  .btns .one { flex:1; }
+  .viewer { position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:50; display:flex; align-items:center; justify-content:center; }
+  .viewer video { max-width:100%; max-height:100%; }
+  .viewer button { position:absolute; top:12px; right:12px; background:#fff; border:0; border-radius:999px; padding:8px 14px; font-size:15px; }
   .price { position:absolute; right:6px; top:6px; background:var(--red); color:#fff; font-weight:700; font-size:14px; padding:3px 8px; border-radius:8px; }
   .tick { position:absolute; left:6px; top:6px; width:28px; height:28px; border-radius:50%; border:2px solid #fff; background:rgba(0,0,0,.25); display:grid; place-items:center; color:#fff; font-weight:700; }
   .card.sel .tick { background:var(--brand); }
@@ -77,21 +83,21 @@ const T = {
     share: "Send on WhatsApp", one: "Share", clear: "Clear", web: "Website", sel: (n) => `${n} ticked`, empty: "No products in this time. Try 7 days or 30 days.",
     bad: "This link doesn't work. Send <b>catalogue</b> to the Resell Ready bot on WhatsApp for a new one.", fail: "Couldn't load. Check your internet and pull down to try again.",
     wait: "Getting photos ready…", copied: "Caption copied. Paste it if WhatsApp doesn't show it.", max: "Up to 10 at a time, please.", sold: "Some products are sold out and were skipped.",
-    added: (n) => n ? `${n} added to your website.` : "Already on your website.", photos: (n) => `${n} photos`,
+    added: (n) => n ? `${n} added to your website.` : "Already on your website.", photos: (n) => `${n} photos`, vids: (n) => `▶ ${n} video${n > 1 ? "s" : ""}`, vbtn: "▶ Video", close: "Close", bigvid: "This video is large and may take a while to download.",
     newest: "Newest", popular: "Most ordered", ordered: (n) => `${n} ordered`, noprice: "Price not given", newr: "New", you: "Your rating", more: "more", nofile: "Your phone can't share photos from here. The text is copied and WhatsApp will open; save the photos by long-pressing them." },
   hi: { title: "मेरा कैटलॉग", sub: (n, s) => `${n} प्रोडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिन", "7 दिन", "30 दिन"], search: "खोजें (कुर्ती, साड़ी, 599…)",
     all: "सभी सप्लायर", hint: "जो प्रोडक्ट चाहिए उन पर टिक करें, फिर <b>WhatsApp पर भेजें</b> दबाएँ। हर फ़ोटो पर आपकी कीमत और आपका नंबर है। Status के लिए एक प्रोडक्ट पर <b>शेयर</b> दबाकर <b>My status</b> चुनें।",
     share: "WhatsApp पर भेजें", one: "शेयर", clear: "हटाएँ", web: "वेबसाइट", sel: (n) => `${n} चुने`, empty: "इस समय में कोई प्रोडक्ट नहीं। 7 दिन या 30 दिन देखें।",
     bad: "यह लिंक काम नहीं कर रहा। नया लिंक पाने के लिए WhatsApp पर Resell Ready बॉट को <b>catalogue</b> भेजें।", fail: "लोड नहीं हुआ। इंटरनेट देखें और फिर से खोलें।",
     wait: "फ़ोटो तैयार हो रही हैं…", copied: "कैप्शन कॉपी हो गया। WhatsApp में न दिखे तो पेस्ट करें।", max: "एक बार में 10 तक।", sold: "कुछ प्रोडक्ट ख़त्म हो गए, उन्हें छोड़ दिया।",
-    added: (n) => n ? `${n} आपकी वेबसाइट पर लगाए।` : "पहले से आपकी वेबसाइट पर हैं।", photos: (n) => `${n} फ़ोटो`,
+    added: (n) => n ? `${n} आपकी वेबसाइट पर लगाए।` : "पहले से आपकी वेबसाइट पर हैं।", photos: (n) => `${n} फ़ोटो`, vids: (n) => `▶ ${n} वीडियो`, vbtn: "▶ वीडियो", close: "बंद करें", bigvid: "यह वीडियो बड़ा है, डाउनलोड में समय लग सकता है।",
     newest: "नए पहले", popular: "सबसे ज़्यादा ऑर्डर", ordered: (n) => `${n} ऑर्डर`, noprice: "कीमत नहीं दी", newr: "नया", you: "आपकी रेटिंग", more: "और", nofile: "आपका फ़ोन यहाँ से फ़ोटो शेयर नहीं कर सकता। टेक्स्ट कॉपी हो गया है और WhatsApp खुलेगा; फ़ोटो को दबाकर सेव करें।" },
   mr: { title: "माझा कॅटलॉग", sub: (n, s) => `${n} प्रॉडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिवस", "7 दिवस", "30 दिवस"], search: "शोधा (कुर्ती, साडी, 599…)",
     all: "सगळे सप्लायर", hint: "हवे ते प्रॉडक्ट टिक करा, मग <b>WhatsApp वर पाठवा</b> दाबा. प्रत्येक फोटोवर तुमची किंमत आणि तुमचा नंबर आहे. Status साठी एका प्रॉडक्टवर <b>शेअर</b> दाबून <b>My status</b> निवडा.",
     share: "WhatsApp वर पाठवा", one: "शेअर", clear: "काढा", web: "वेबसाइट", sel: (n) => `${n} निवडले`, empty: "या वेळेत प्रॉडक्ट नाहीत. 7 दिवस किंवा 30 दिवस पाहा.",
     bad: "ही लिंक चालत नाही. नवी लिंक मिळवण्यासाठी WhatsApp वर Resell Ready बॉटला <b>catalogue</b> पाठवा.", fail: "लोड झालं नाही. इंटरनेट तपासा आणि पुन्हा उघडा.",
     wait: "फोटो तयार होत आहेत…", copied: "कॅप्शन कॉपी झालं. WhatsApp मध्ये दिसलं नाही तर पेस्ट करा.", max: "एका वेळी 10 पर्यंत.", sold: "काही प्रॉडक्ट संपले, ते वगळले.",
-    added: (n) => n ? `${n} तुमच्या वेबसाइटवर लावले.` : "आधीच तुमच्या वेबसाइटवर आहेत.", photos: (n) => `${n} फोटो`,
+    added: (n) => n ? `${n} तुमच्या वेबसाइटवर लावले.` : "आधीच तुमच्या वेबसाइटवर आहेत.", photos: (n) => `${n} फोटो`, vids: (n) => `▶ ${n} व्हिडिओ`, vbtn: "▶ व्हिडिओ", close: "बंद करा", bigvid: "हा व्हिडिओ मोठा आहे, डाउनलोडला वेळ लागू शकतो.",
     newest: "नवे आधी", popular: "सर्वाधिक ऑर्डर", ordered: (n) => `${n} ऑर्डर`, noprice: "किंमत दिली नाही", newr: "नवीन", you: "तुमचं रेटिंग", more: "आणखी", nofile: "तुमचा फोन इथून फोटो शेअर करू शकत नाही. टेक्स्ट कॉपी झालं आहे आणि WhatsApp उघडेल; फोटो दाबून ठेवून सेव्ह करा." },
 };
 const DAYS = [1, 3, 7, 30];
@@ -157,15 +163,16 @@ function render() {
   $("grid").innerHTML = list.map((p) => `
     <div class="card${picked.has(p.key) ? " sel" : ""}" data-k="${p.key}">
       <div class="pic" data-pick="${p.key}">
-        ${p.img ? `<img loading="lazy" src="${esc(p.img)}" alt="">` : ""}
+        ${p.img ? `<img loading="lazy" src="${esc(p.img)}" alt="">` : p.vid ? `<video src="${esc(p.vid)}#t=0.5" preload="metadata" muted playsinline></video>` : ""}
+        ${p.vid ? `<button class="play" data-play="${p.key}" aria-label="${L.vbtn}">▶</button>` : ""}
         <span class="tick">${picked.has(p.key) ? "✓" : ""}</span>
         ${p.price ? `<span class="price">${rupees(p.price)}</span>` : `<span class="noprice">${L.noprice}</span>`}
-        ${p.photos > 1 ? `<span class="count">${L.photos(p.photos)}</span>` : ""}
+        ${p.photos > 1 || p.videos ? `<span class="count">${[p.photos > 1 ? L.photos(p.photos) : "", p.videos ? L.vids(p.videos) : ""].filter(Boolean).join(" · ")}</span>` : ""}
       </div>
       <div class="meta"><b>${esc(p.title)}</b><small>${esc([p.code, p.sizes.slice(0, 4).join(" "), p.supplier].filter(Boolean).join(" · "))}</small>
         ${p.stars ? `<div class="stars">${"★".repeat(Math.round(p.stars))}${"☆".repeat(5 - Math.round(p.stars))} ${Number(p.stars).toFixed(1)} <span>· ${L.ordered(p.orders)}</span></div>` : ""}
         ${p.desc && p.desc !== p.title ? `<div class="desc" data-desc>${esc(p.desc)}</div>` : ""}
-        <button class="one" data-one="${p.key}">${L.one}</button></div>
+        <div class="btns"><button class="one" data-one="${p.key}">${L.one}</button>${p.videos && p.photos ? `<button class="one" data-vid="${p.key}">${L.vbtn}</button>` : ""}</div></div>
     </div>`).join("");
   foot();
 }
@@ -179,11 +186,11 @@ async function fileFrom(url, name) {
   const r = await fetch(url);
   if (!r.ok) throw new Error("photo");
   const b = await r.blob();
-  return new File([b], name, { type: b.type || "image/jpeg" });
+  return new File([b], name, { type: b.type || (name.endsWith(".mp4") ? "video/mp4" : "image/jpeg") });
 }
 
 // Gets each product's stamped photo and caption, then opens the phone's share sheet (WhatsApp, Status…).
-async function share(keys) {
+async function share(keys, videoOnly = false) {
   if (keys.length > 10) { toast(L.max); return; }
   busy(true);
   let items = [], skipped = 0;
@@ -196,8 +203,12 @@ async function share(keys) {
     try { await navigator.clipboard.writeText(text); } catch { /* not allowed: fine */ }
     const files = [];
     for (const i of items) {
-      const m = i.media.find((x) => x.kind === "image" && x.url);
-      if (m) { try { files.push(await fileFrom(m.url, `${i.code}.jpg`)); } catch { /* skip this photo */ } }
+      const img = i.media.find((x) => x.kind === "image" && x.url);
+      const vids = i.media.filter((x) => x.kind === "video" && x.url);
+      const pick = videoOnly || !img ? vids.slice(0, 3) : [img];
+      for (const [n, m] of pick.entries()) {
+        try { files.push(await fileFrom(m.url, m.kind === "video" ? `${i.code}${n ? "-" + (n + 1) : ""}.mp4` : `${i.code}.jpg`)); } catch { /* skip this one */ }
+      }
     }
     busy(false);
     if (files.length && navigator.canShare && navigator.canShare({ files })) {
@@ -212,6 +223,14 @@ async function share(keys) {
   } finally { busy(false); }
 }
 
+function openVideo(url) {
+  const v = document.createElement("div");
+  v.className = "viewer";
+  v.innerHTML = `<video src="${esc(url)}" controls autoplay playsinline></video><button>${L.close}</button>`;
+  v.querySelector("button").onclick = () => v.remove();
+  document.body.appendChild(v);
+}
+
 async function toWebsite() {
   busy(true);
   try {
@@ -224,6 +243,10 @@ async function toWebsite() {
 $("grid").addEventListener("click", (e) => {
   const d = e.target.closest("[data-desc]");
   if (d) { d.classList.toggle("open"); return; }
+  const pl = e.target.closest("[data-play]");
+  if (pl) { const p = (data?.products || []).find((x) => x.key === Number(pl.dataset.play)); if (p?.vid) openVideo(p.vid); return; }
+  const vb = e.target.closest("[data-vid]");
+  if (vb) { share([Number(vb.dataset.vid)], true); return; }
   const one = e.target.closest("[data-one]");
   if (one) { share([Number(one.dataset.one)]); return; }
   const pick = e.target.closest("[data-pick]");
