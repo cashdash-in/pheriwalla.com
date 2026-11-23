@@ -16,7 +16,8 @@
   .bar { display:flex; gap:8px; padding:10px 12px; overflow-x:auto; background:#fff; border-bottom:1px solid var(--line); position:sticky; top:62px; z-index:4; }
   .chip { flex:none; border:1px solid var(--line); background:#fff; border-radius:999px; padding:8px 14px; font-size:14px; color:var(--ink); }
   .chip.on { background:var(--brand); color:#fff; border-color:var(--brand); }
-  .tools { display:flex; gap:8px; padding:10px 12px 0; }
+  .tools { display:flex; flex-wrap:wrap; gap:8px; padding:10px 12px 0; }
+  .tools input { flex:1 1 100% !important; }
   .tools input, .tools select { flex:1; min-width:0; font-size:15px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; }
   .hint { margin:10px 12px 0; padding:10px 12px; background:var(--brand-soft); border-radius:10px; font-size:13.5px; line-height:1.4; }
   .grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; padding:12px 12px 120px; }
@@ -33,6 +34,11 @@
   .meta { padding:8px 9px 9px; }
   .meta b { display:block; font-size:13.5px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .meta small { display:block; color:var(--muted); font-size:12px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .desc { font-size:12.5px; color:#374151; margin-top:4px; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-line; }
+  .desc.open { -webkit-line-clamp:unset; display:block; }
+  .stars { font-size:12.5px; margin-top:4px; color:#b45309; font-weight:600; }
+  .stars span { color:var(--muted); font-weight:400; }
+  .noprice { position:absolute; right:6px; top:6px; background:rgba(0,0,0,.55); color:#fff; font-size:12px; padding:3px 7px; border-radius:8px; }
   .one { margin-top:7px; width:100%; border:1px solid var(--brand); color:var(--brand); background:#fff; border-radius:8px; padding:7px; font-size:13.5px; font-weight:600; }
   .foot { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); display:none; gap:8px; align-items:center; z-index:6; box-shadow:0 -4px 16px rgba(0,0,0,.06); }
   .foot.show { display:flex; }
@@ -50,7 +56,7 @@
 <body>
 <header><h1 id="title">…</h1><p id="sub"></p></header>
 <div class="bar" id="days"></div>
-<div class="tools"><input id="q" type="search" autocomplete="off"><select id="sup" hidden></select></div>
+<div class="tools"><input id="q" type="search" autocomplete="off"><select id="sup" hidden></select><select id="sort"></select></div>
 <div class="hint" id="hint"></div>
 <main class="grid" id="grid"></main>
 <div class="foot" id="foot">
@@ -70,19 +76,22 @@ const T = {
     share: "Send on WhatsApp", one: "Share", clear: "Clear", web: "Website", sel: (n) => `${n} ticked`, empty: "No products in this time. Try 7 days or 30 days.",
     bad: "This link doesn't work. Send <b>catalogue</b> to the Resell Ready bot on WhatsApp for a new one.", fail: "Couldn't load. Check your internet and pull down to try again.",
     wait: "Getting photos ready…", copied: "Caption copied. Paste it if WhatsApp doesn't show it.", max: "Up to 10 at a time, please.", sold: "Some products are sold out and were skipped.",
-    added: (n) => n ? `${n} added to your website.` : "Already on your website.", photos: (n) => `${n} photos`, nofile: "Your phone can't share photos from here. The text is copied and WhatsApp will open; save the photos by long-pressing them." },
+    added: (n) => n ? `${n} added to your website.` : "Already on your website.", photos: (n) => `${n} photos`,
+    newest: "Newest", popular: "Most ordered", ordered: (n) => `${n} ordered`, noprice: "Price not given", newr: "New", you: "Your rating", more: "more", nofile: "Your phone can't share photos from here. The text is copied and WhatsApp will open; save the photos by long-pressing them." },
   hi: { title: "मेरा कैटलॉग", sub: (n, s) => `${n} प्रोडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिन", "7 दिन", "30 दिन"], search: "खोजें (कुर्ती, साड़ी, 599…)",
     all: "सभी सप्लायर", hint: "जो प्रोडक्ट चाहिए उन पर टिक करें, फिर <b>WhatsApp पर भेजें</b> दबाएँ। हर फ़ोटो पर आपकी कीमत और आपका नंबर है। Status के लिए एक प्रोडक्ट पर <b>शेयर</b> दबाकर <b>My status</b> चुनें।",
     share: "WhatsApp पर भेजें", one: "शेयर", clear: "हटाएँ", web: "वेबसाइट", sel: (n) => `${n} चुने`, empty: "इस समय में कोई प्रोडक्ट नहीं। 7 दिन या 30 दिन देखें।",
     bad: "यह लिंक काम नहीं कर रहा। नया लिंक पाने के लिए WhatsApp पर Resell Ready बॉट को <b>catalogue</b> भेजें।", fail: "लोड नहीं हुआ। इंटरनेट देखें और फिर से खोलें।",
     wait: "फ़ोटो तैयार हो रही हैं…", copied: "कैप्शन कॉपी हो गया। WhatsApp में न दिखे तो पेस्ट करें।", max: "एक बार में 10 तक।", sold: "कुछ प्रोडक्ट ख़त्म हो गए, उन्हें छोड़ दिया।",
-    added: (n) => n ? `${n} आपकी वेबसाइट पर लगाए।` : "पहले से आपकी वेबसाइट पर हैं।", photos: (n) => `${n} फ़ोटो`, nofile: "आपका फ़ोन यहाँ से फ़ोटो शेयर नहीं कर सकता। टेक्स्ट कॉपी हो गया है और WhatsApp खुलेगा; फ़ोटो को दबाकर सेव करें।" },
+    added: (n) => n ? `${n} आपकी वेबसाइट पर लगाए।` : "पहले से आपकी वेबसाइट पर हैं।", photos: (n) => `${n} फ़ोटो`,
+    newest: "नए पहले", popular: "सबसे ज़्यादा ऑर्डर", ordered: (n) => `${n} ऑर्डर`, noprice: "कीमत नहीं दी", newr: "नया", you: "आपकी रेटिंग", more: "और", nofile: "आपका फ़ोन यहाँ से फ़ोटो शेयर नहीं कर सकता। टेक्स्ट कॉपी हो गया है और WhatsApp खुलेगा; फ़ोटो को दबाकर सेव करें।" },
   mr: { title: "माझा कॅटलॉग", sub: (n, s) => `${n} प्रॉडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिवस", "7 दिवस", "30 दिवस"], search: "शोधा (कुर्ती, साडी, 599…)",
     all: "सगळे सप्लायर", hint: "हवे ते प्रॉडक्ट टिक करा, मग <b>WhatsApp वर पाठवा</b> दाबा. प्रत्येक फोटोवर तुमची किंमत आणि तुमचा नंबर आहे. Status साठी एका प्रॉडक्टवर <b>शेअर</b> दाबून <b>My status</b> निवडा.",
     share: "WhatsApp वर पाठवा", one: "शेअर", clear: "काढा", web: "वेबसाइट", sel: (n) => `${n} निवडले`, empty: "या वेळेत प्रॉडक्ट नाहीत. 7 दिवस किंवा 30 दिवस पाहा.",
     bad: "ही लिंक चालत नाही. नवी लिंक मिळवण्यासाठी WhatsApp वर Resell Ready बॉटला <b>catalogue</b> पाठवा.", fail: "लोड झालं नाही. इंटरनेट तपासा आणि पुन्हा उघडा.",
     wait: "फोटो तयार होत आहेत…", copied: "कॅप्शन कॉपी झालं. WhatsApp मध्ये दिसलं नाही तर पेस्ट करा.", max: "एका वेळी 10 पर्यंत.", sold: "काही प्रॉडक्ट संपले, ते वगळले.",
-    added: (n) => n ? `${n} तुमच्या वेबसाइटवर लावले.` : "आधीच तुमच्या वेबसाइटवर आहेत.", photos: (n) => `${n} फोटो`, nofile: "तुमचा फोन इथून फोटो शेअर करू शकत नाही. टेक्स्ट कॉपी झालं आहे आणि WhatsApp उघडेल; फोटो दाबून ठेवून सेव्ह करा." },
+    added: (n) => n ? `${n} तुमच्या वेबसाइटवर लावले.` : "आधीच तुमच्या वेबसाइटवर आहेत.", photos: (n) => `${n} फोटो`,
+    newest: "नवे आधी", popular: "सर्वाधिक ऑर्डर", ordered: (n) => `${n} ऑर्डर`, noprice: "किंमत दिली नाही", newr: "नवीन", you: "तुमचं रेटिंग", more: "आणखी", nofile: "तुमचा फोन इथून फोटो शेअर करू शकत नाही. टेक्स्ट कॉपी झालं आहे आणि WhatsApp उघडेल; फोटो दाबून ठेवून सेव्ह करा." },
 };
 const DAYS = [1, 3, 7, 30];
 const $ = (id) => document.getElementById(id);
@@ -101,6 +110,9 @@ function labels() {
   $("q").placeholder = L.search;
   $("hint").innerHTML = L.hint;
   $("share").textContent = L.share; $("clear").textContent = L.clear; $("web").textContent = L.web;
+  const so = $("sort").value || "new";
+  $("sort").innerHTML = `<option value="new">${L.newest}</option><option value="pop">${L.popular}</option>`;
+  $("sort").value = so;
   $("days").innerHTML = DAYS.map((d, i) => `<button class="chip${d === days ? " on" : ""}" data-d="${d}">${L.days[i]}</button>`).join("");
 }
 
@@ -118,7 +130,7 @@ async function load() {
     sel.hidden = !(data.suppliers?.length > 1);
     if (!sel.hidden) {
       const cur = sel.value;
-      sel.innerHTML = `<option value="">${L.all}</option>` + data.suppliers.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join("");
+      sel.innerHTML = `<option value="">${L.all}</option>` + data.suppliers.map((s) => `<option value="${s.id}">${esc(s.name)}${s.stars ? ` ★${Number(s.stars).toFixed(1)}` : ""}</option>`).join("");
       sel.value = cur;
     }
     $("web").hidden = !data.web;
@@ -130,22 +142,27 @@ async function load() {
 
 function visible() {
   const q = $("q").value.trim().toLowerCase(), s = $("sup").value;
-  return (data?.products || []).filter((p) => (!s || p.sid === s) && (!q || `${p.title} ${p.code} ${p.supplier || ""} ${p.price || ""} ${p.sizes.join(" ")}`.toLowerCase().includes(q)));
+  const list = (data?.products || []).filter((p) => (!s || p.sid === s) && (!q || `${p.title} ${p.desc || ""} ${p.code} ${p.supplier || ""} ${p.price || ""} ${p.sizes.join(" ")}`.toLowerCase().includes(q)));
+  return $("sort").value === "pop" ? [...list].sort((a, b) => (b.orders || 0) - (a.orders || 0)) : list;
 }
 
 function render() {
   const list = visible();
-  $("sub").textContent = L.sub(list.length, data?.suppliers?.length === 1 ? data.suppliers[0].name : "");
+  const rt = data?.rating;
+  $("sub").textContent = L.sub(list.length, data?.suppliers?.length === 1 ? data.suppliers[0].name : "") +
+    (rt ? ` · ${L.you}: ${rt.stars ? "★" + Number(rt.stars).toFixed(1) : L.newr}` : "");
   if (!list.length) { $("grid").innerHTML = `<div class="empty">${L.empty}</div>`; foot(); return; }
   $("grid").innerHTML = list.map((p) => `
     <div class="card${picked.has(p.key) ? " sel" : ""}" data-k="${p.key}">
       <div class="pic" data-pick="${p.key}">
         ${p.img ? `<img loading="lazy" src="${esc(p.img)}" alt="">` : ""}
         <span class="tick">${picked.has(p.key) ? "✓" : ""}</span>
-        ${p.price ? `<span class="price">${rupees(p.price)}</span>` : ""}
+        ${p.price ? `<span class="price">${rupees(p.price)}</span>` : `<span class="noprice">${L.noprice}</span>`}
         ${p.photos > 1 ? `<span class="count">${L.photos(p.photos)}</span>` : ""}
       </div>
       <div class="meta"><b>${esc(p.title)}</b><small>${esc([p.code, p.sizes.slice(0, 4).join(" "), p.supplier].filter(Boolean).join(" · "))}</small>
+        ${p.stars ? `<div class="stars">${"★".repeat(Math.round(p.stars))}${"☆".repeat(5 - Math.round(p.stars))} ${Number(p.stars).toFixed(1)} <span>· ${L.ordered(p.orders)}</span></div>` : ""}
+        ${p.desc && p.desc !== p.title ? `<div class="desc" data-desc>${esc(p.desc)}</div>` : ""}
         <button class="one" data-one="${p.key}">${L.one}</button></div>
     </div>`).join("");
   foot();
@@ -203,6 +220,8 @@ async function toWebsite() {
 }
 
 $("grid").addEventListener("click", (e) => {
+  const d = e.target.closest("[data-desc]");
+  if (d) { d.classList.toggle("open"); return; }
   const one = e.target.closest("[data-one]");
   if (one) { share([Number(one.dataset.one)]); return; }
   const pick = e.target.closest("[data-pick]");
@@ -217,6 +236,7 @@ $("grid").addEventListener("click", (e) => {
 $("days").addEventListener("click", (e) => { const b = e.target.closest("[data-d]"); if (!b) return; days = Number(b.dataset.d); picked.clear(); load(); });
 $("q").addEventListener("input", render);
 $("sup").addEventListener("change", render);
+$("sort").addEventListener("change", render);
 $("share").addEventListener("click", () => share([...picked]));
 $("clear").addEventListener("click", () => { picked.clear(); render(); });
 $("web").addEventListener("click", toWebsite);
