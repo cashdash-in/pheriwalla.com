@@ -12,6 +12,9 @@
   body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", sans-serif; color:var(--ink); background:var(--bg); }
   header { background:var(--brand); color:#fff; padding:14px 16px 12px; position:sticky; top:0; z-index:5; }
   .dashbtn { float:right; color:#fff; text-decoration:none; font-size:13px; font-weight:600; border:1px solid rgba(255,255,255,.6); border-radius:999px; padding:5px 10px; margin-left:8px; }
+  .tools2 { display:flex; gap:8px; padding:10px 12px 0; overflow-x:auto; }
+  .tools2 a, .tools2 button { flex:none; display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--brand); color:var(--brand); border-radius:10px; padding:9px 12px; font-size:14px; font-weight:600; text-decoration:none; font-family:inherit; cursor:pointer; }
+  .tools2 img { width:22px; height:22px; border-radius:5px; object-fit:contain; background:#fff; }
   header h1 { margin:0; font-size:19px; font-weight:700; }
   header p { margin:2px 0 0; font-size:13px; opacity:.85; }
   .bar { display:flex; gap:8px; padding:10px 12px; overflow-x:auto; background:#fff; border-bottom:1px solid var(--line); position:sticky; top:62px; z-index:4; }
@@ -64,6 +67,8 @@
 <header><a id="dash" class="dashbtn" hidden>📊 <span></span></a><h1 id="title">…</h1><p id="sub"></p></header>
 <div class="bar" id="days"></div>
 <div class="tools"><input id="q" type="search" autocomplete="off"><select id="sup" hidden></select><select id="sort"></select></div>
+<div class="tools2" id="tools2" hidden></div>
+<input id="fLogo" type="file" accept="image/*" hidden>
 <div class="hint" id="hint"></div>
 <main class="grid" id="grid"></main>
 <div class="foot" id="foot">
@@ -74,11 +79,13 @@
 </div>
 <div class="toast" id="toast"></div>
 <div class="busy" id="busy"></div>
+<script src="lib/up.js"></script>
 <script>
 "use strict";
 const API = "https://obgedilcyvaaewpvvdzi.supabase.co/functions/v1/shop";
 const T = {
   en: { title: "My catalogue", sub: (n, s) => `${n} products${s ? " · " + s : ""}`, days: ["Today", "3 days", "7 days", "30 days"], search: "Search (kurti, saree, 599…)",
+    addp: "＋ Add products", inv: "👥 Invite resellers", logo: "Logo", logoSet: "Logo saved. New photos will carry it.", logoFail: "Could not save the logo. Try again.",
     all: "All suppliers", hint: "Tick the products you want, then tap <b>Send on WhatsApp</b>. Each photo has your price and your number on it. For Status, use <b>Share</b> on one product and pick <b>My status</b>.",
     share: "Send on WhatsApp", one: "Share", clear: "Clear", web: "Website", sel: (n) => `${n} ticked`, empty: "No products in this time. Try 7 days or 30 days.",
     bad: "This link doesn't work. Send <b>catalogue</b> to the Resell Ready bot on WhatsApp for a new one.", fail: "Couldn't load. Check your internet and pull down to try again.",
@@ -86,6 +93,7 @@ const T = {
     added: (n) => n ? `${n} added to your website.` : "Already on your website.", photos: (n) => `${n} photos`, vids: (n) => `▶ ${n} video${n > 1 ? "s" : ""}`, vbtn: "▶ Video", close: "Close", bigvid: "This video is large and may take a while to download.",
     newest: "Newest", popular: "Most ordered", ordered: (n) => `${n} ordered`, noprice: "Price not given", newr: "New", you: "Your rating", more: "more", nofile: "Your phone can't share photos from here. The text is copied and WhatsApp will open; save the photos by long-pressing them." },
   hi: { title: "मेरा कैटलॉग", sub: (n, s) => `${n} प्रोडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिन", "7 दिन", "30 दिन"], search: "खोजें (कुर्ती, साड़ी, 599…)",
+    addp: "＋ प्रोडक्ट जोड़ें", inv: "👥 रीसेलर बुलाएँ", logo: "लोगो", logoSet: "लोगो सेव हो गया। नई फ़ोटो पर दिखेगा।", logoFail: "लोगो सेव नहीं हुआ। फिर कोशिश करें।",
     all: "सभी सप्लायर", hint: "जो प्रोडक्ट चाहिए उन पर टिक करें, फिर <b>WhatsApp पर भेजें</b> दबाएँ। हर फ़ोटो पर आपकी कीमत और आपका नंबर है। Status के लिए एक प्रोडक्ट पर <b>शेयर</b> दबाकर <b>My status</b> चुनें।",
     share: "WhatsApp पर भेजें", one: "शेयर", clear: "हटाएँ", web: "वेबसाइट", sel: (n) => `${n} चुने`, empty: "इस समय में कोई प्रोडक्ट नहीं। 7 दिन या 30 दिन देखें।",
     bad: "यह लिंक काम नहीं कर रहा। नया लिंक पाने के लिए WhatsApp पर Resell Ready बॉट को <b>catalogue</b> भेजें।", fail: "लोड नहीं हुआ। इंटरनेट देखें और फिर से खोलें।",
@@ -93,6 +101,7 @@ const T = {
     added: (n) => n ? `${n} आपकी वेबसाइट पर लगाए।` : "पहले से आपकी वेबसाइट पर हैं।", photos: (n) => `${n} फ़ोटो`, vids: (n) => `▶ ${n} वीडियो`, vbtn: "▶ वीडियो", close: "बंद करें", bigvid: "यह वीडियो बड़ा है, डाउनलोड में समय लग सकता है।",
     newest: "नए पहले", popular: "सबसे ज़्यादा ऑर्डर", ordered: (n) => `${n} ऑर्डर`, noprice: "कीमत नहीं दी", newr: "नया", you: "आपकी रेटिंग", more: "और", nofile: "आपका फ़ोन यहाँ से फ़ोटो शेयर नहीं कर सकता। टेक्स्ट कॉपी हो गया है और WhatsApp खुलेगा; फ़ोटो को दबाकर सेव करें।" },
   mr: { title: "माझा कॅटलॉग", sub: (n, s) => `${n} प्रॉडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिवस", "7 दिवस", "30 दिवस"], search: "शोधा (कुर्ती, साडी, 599…)",
+    addp: "＋ प्रॉडक्ट जोडा", inv: "👥 रीसेलर बोलवा", logo: "लोगो", logoSet: "लोगो सेव्ह झाला. नव्या फोटोंवर दिसेल.", logoFail: "लोगो सेव्ह झाला नाही. पुन्हा प्रयत्न करा.",
     all: "सगळे सप्लायर", hint: "हवे ते प्रॉडक्ट टिक करा, मग <b>WhatsApp वर पाठवा</b> दाबा. प्रत्येक फोटोवर तुमची किंमत आणि तुमचा नंबर आहे. Status साठी एका प्रॉडक्टवर <b>शेअर</b> दाबून <b>My status</b> निवडा.",
     share: "WhatsApp वर पाठवा", one: "शेअर", clear: "काढा", web: "वेबसाइट", sel: (n) => `${n} निवडले`, empty: "या वेळेत प्रॉडक्ट नाहीत. 7 दिवस किंवा 30 दिवस पाहा.",
     bad: "ही लिंक चालत नाही. नवी लिंक मिळवण्यासाठी WhatsApp वर Resell Ready बॉटला <b>catalogue</b> पाठवा.", fail: "लोड झालं नाही. इंटरनेट तपासा आणि पुन्हा उघडा.",
@@ -156,6 +165,10 @@ function visible() {
 function render() {
   const list = visible();
   const rt = data?.rating;
+  const t2 = [];
+  if (data?.role === "supplier") t2.push(`<a href="add.html?c=${encodeURIComponent(tok)}">${L.addp}</a>`, `<a href="invite.html?c=${encodeURIComponent(tok)}">${L.inv}</a>`);
+  if (data) t2.push(`<button id="logoBtn">${data.logo ? `<img src="${esc(data.logo)}" alt="">` : "🖼"} ${L.logo}</button>`);
+  $("tools2").innerHTML = t2.join(""); $("tools2").hidden = !t2.length;
   if (tok) { $("dash").hidden = false; $("dash").href = `dash.html?c=${encodeURIComponent(tok)}`; $("dash").querySelector("span").textContent = ({ hi: "डैशबोर्ड", mr: "डॅशबोर्ड" })[data?.lang] || "Dashboard"; }
   $("sub").textContent = L.sub(list.length, data?.suppliers?.length === 1 ? data.suppliers[0].name : "") +
     (rt ? ` · ${L.you}: ${rt.stars ? "★" + Number(rt.stars).toFixed(1) : L.newr}` : "");
@@ -262,6 +275,19 @@ $("days").addEventListener("click", (e) => { const b = e.target.closest("[data-d
 $("q").addEventListener("input", render);
 $("sup").addEventListener("change", render);
 $("sort").addEventListener("change", render);
+$("tools2").addEventListener("click", (e) => { if (e.target.closest("#logoBtn")) $("fLogo").click(); });
+$("fLogo").addEventListener("change", async (e) => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  busy(true);
+  try {
+    const blob = await RR.shrink(f, 600, true);
+    const [path] = await RR.upload([blob], "logo");
+    if (!path) throw new Error("upload");
+    await RR.call("logo", { path });
+    toast(L.logoSet, 3500);
+    load();
+  } catch { toast(L.logoFail); } finally { busy(false); }
+});
 $("share").addEventListener("click", () => share([...picked]));
 $("clear").addEventListener("click", () => { picked.clear(); render(); });
 $("web").addEventListener("click", toWebsite);

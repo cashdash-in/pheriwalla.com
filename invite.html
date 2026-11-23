@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="robots" content="noindex">
+<title>Invite resellers · Resell Ready</title>
+<style>
+  :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --brand-soft:#e6f4f1; --bg:#f6f7f8; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari",sans-serif; color:var(--ink); background:var(--bg); padding-bottom:100px; }
+  header { background:var(--brand); color:#fff; padding:14px 16px 12px; position:sticky; top:0; z-index:5; }
+  header h1 { margin:0; font-size:19px; } header p { margin:3px 0 0; font-size:13px; opacity:.9; } header a { color:#fff; }
+  main { max-width:760px; margin:0 auto; padding:12px; display:grid; gap:12px; }
+  .box { background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .box h2 { margin:0 0 8px; font-size:15px; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center; }
+  .stats b { display:block; font-size:22px; } .stats small { color:var(--muted); font-size:12.5px; }
+  .ways { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .way { background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 8px; text-align:center; font-size:13.5px; font-weight:600; cursor:pointer; color:var(--ink); font-family:inherit; }
+  .way span { display:block; font-size:24px; margin-bottom:4px; }
+  textarea { width:100%; font:inherit; font-size:15px; padding:9px 10px; border:1px solid var(--line); border-radius:9px; min-height:90px; }
+  .btn { background:var(--brand); color:#fff; border:0; border-radius:10px; padding:10px 16px; font-size:14.5px; font-weight:700; cursor:pointer; }
+  .btn.ghost { background:#fff; color:var(--brand); border:1px solid var(--brand); }
+  .hint { background:var(--brand-soft); border-radius:10px; padding:10px 12px; font-size:13.5px; line-height:1.45; }
+  .c { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .c:last-child { border-bottom:0; }
+  .c .who { flex:1; min-width:0; } .c .who b { display:block; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .c .who small { color:var(--muted); font-size:12.5px; }
+  .pill { font-size:11.5px; padding:2px 8px; border-radius:999px; background:#eef0f2; white-space:nowrap; }
+  .pill.g { background:#dcfce7; color:#166534; } .pill.w { background:#ffedd5; color:#9a3412; } .pill.i { background:#e0e7ff; color:#3730a3; }
+  .c .btn { padding:8px 12px; font-size:13.5px; }
+  .foot { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:10px; align-items:center; z-index:6; }
+  .foot .info { flex:1; font-size:13.5px; color:var(--muted); }
+  .empty { text-align:center; color:var(--muted); padding:22px 8px; font-size:14px; }
+  .toast { position:fixed; left:50%; bottom:84px; transform:translateX(-50%); background:#111827; color:#fff; padding:10px 14px; border-radius:10px; font-size:14px; z-index:9; display:none; max-width:90vw; }
+</style>
+</head>
+<body>
+<header><h1 id="h">Invite resellers</h1><p><span id="shop"></span> · <a id="back" href="#">← Catalogue</a></p></header>
+<main id="main">
+  <div class="box stats"><div><b id="sT">0</b><small id="sTl">Contacts</small></div><div><b id="sS">0</b><small id="sSl">Invited</small></div><div><b id="sJ">0</b><small id="sJl">Joined</small></div></div>
+  <div class="hint" id="hint"></div>
+  <div class="ways">
+    <button class="way" id="pick"><span>📱</span><b id="w1">Phone contacts</b></button>
+    <label class="way"><span>📊</span><b id="w2">Excel / CSV / .vcf</b><input id="fFile" type="file" accept=".xlsx,.xls,.csv,.vcf,.ods,.txt" hidden></label>
+  </div>
+  <div class="box"><h2 id="pasteH">Or type / paste numbers</h2><textarea id="paste" placeholder="Priya, 98765 43210&#10;Sunita 9123456780"></textarea><div style="margin-top:8px"><button class="btn ghost" id="addPaste">Add</button></div></div>
+  <div class="box"><h2 id="listH">Your contacts</h2><div id="list"></div></div>
+</main>
+<div class="foot"><div class="info" id="info"></div><button class="btn" id="next">Send next</button></div>
+<div class="toast" id="toast"></div>
+
+<script src="lib/up.js"></script>
+<script>
+const T = {
+  en: { h: "Invite resellers", back: "← Catalogue", sT: "Contacts", sS: "Invited", sJ: "Joined", w1: "Phone contacts", w2: "Excel / CSV / .vcf",
+    hint: "Add the people you want as resellers. Each one gets their own WhatsApp message with your joining link. Messages go from <b>your own WhatsApp</b>, one tap each, so they are free and come from a number they know. When someone joins, you'll see it here and approve them in the bot.",
+    pasteH: "Or type / paste numbers", add: "Add", listH: "Your contacts", none: "No contacts yet.",
+    send: "Send", resend: "Again", next: "Send next", allSent: "Everyone has been invited 🎉", left: (n) => `${n} still to invite`,
+    added: (a, s) => `${a} added${s ? `, ${s} skipped (wrong or repeated numbers)` : ""}.`, nopick: "Your phone's browser can't open contacts. Use Excel/CSV, a .vcf contacts file, or paste numbers.",
+    st: { joined: "Joined ✓", pending: "Waiting for your approval", sent: "Invited", new: "Not invited yet", rejected: "Declined" },
+    hello: (n) => n ? `Hi ${n},\n\n` : "", bad: "This link doesn't work. Send *catalogue* to the bot for a new one.", onlySup: "Only suppliers can invite resellers.", fail: "Something went wrong. Try again." },
+  hi: { h: "रीसेलर बुलाएँ", back: "← कैटलॉग", sT: "कॉन्टैक्ट", sS: "बुलाए", sJ: "जुड़े", w1: "फ़ोन कॉन्टैक्ट", w2: "Excel / CSV / .vcf",
+    hint: "जिन्हें रीसेलर बनाना है उन्हें जोड़ें। हर एक को आपके जुड़ने के लिंक के साथ अलग WhatsApp मैसेज जाता है। मैसेज <b>आपके अपने WhatsApp</b> से जाते हैं, हर एक पर एक टैप, इसलिए मुफ़्त हैं और जाने-पहचाने नंबर से आते हैं। कोई जुड़े तो यहाँ दिखेगा और आप बॉट में मंज़ूरी देंगे।",
+    pasteH: "या नंबर लिखें / पेस्ट करें", add: "जोड़ें", listH: "आपके कॉन्टैक्ट", none: "अभी कोई कॉन्टैक्ट नहीं।",
+    send: "भेजें", resend: "फिर से", next: "अगले को भेजें", allSent: "सबको बुला लिया 🎉", left: (n) => `${n} को बुलाना बाकी`,
+    added: (a, s) => `${a} जुड़े${s ? `, ${s} छोड़े (ग़लत या दोहराए नंबर)` : ""}।`, nopick: "फ़ोन का ब्राउज़र कॉन्टैक्ट नहीं खोल सकता। Excel/CSV, .vcf फ़ाइल या नंबर पेस्ट करें।",
+    st: { joined: "जुड़ गए ✓", pending: "आपकी मंज़ूरी बाकी", sent: "बुलाया", new: "अभी नहीं बुलाया", rejected: "मना किया" },
+    hello: (n) => n ? `नमस्ते ${n},\n\n` : "", bad: "यह लिंक काम नहीं कर रहा। बॉट को *catalogue* भेजें।", onlySup: "सिर्फ़ सप्लायर रीसेलर बुला सकते हैं।", fail: "कुछ गड़बड़ हुई। फिर कोशिश करें।" },
+  mr: { h: "रीसेलर बोलवा", back: "← कॅटलॉग", sT: "कॉन्टॅक्ट", sS: "बोलावले", sJ: "जोडले", w1: "फोन कॉन्टॅक्ट", w2: "Excel / CSV / .vcf",
+    hint: "ज्यांना रीसेलर करायचं त्यांना जोडा. प्रत्येकाला तुमच्या जोडण्याच्या लिंकसह वेगळा WhatsApp मेसेज जातो. मेसेज <b>तुमच्या स्वतःच्या WhatsApp</b> वरून जातात, प्रत्येकावर एक टॅप, त्यामुळे मोफत आणि ओळखीच्या नंबरवरून येतात. कोणी जोडलं की इथे दिसेल आणि तुम्ही बॉटमध्ये मंजुरी द्याल.",
+    pasteH: "किंवा नंबर लिहा / पेस्ट करा", add: "जोडा", listH: "तुमचे कॉन्टॅक्ट", none: "अजून कॉन्टॅक्ट नाहीत.",
+    send: "पाठवा", resend: "पुन्हा", next: "पुढच्याला पाठवा", allSent: "सगळ्यांना बोलावलं 🎉", left: (n) => `${n} जणांना बोलवायचं बाकी`,
+    added: (a, s) => `${a} जोडले${s ? `, ${s} सोडले (चुकीचे किंवा पुन्हा आलेले नंबर)` : ""}.`, nopick: "फोनचा ब्राउझर कॉन्टॅक्ट उघडू शकत नाही. Excel/CSV, .vcf फाइल किंवा नंबर पेस्ट करा.",
+    st: { joined: "जोडले ✓", pending: "तुमची मंजुरी बाकी", sent: "बोलावले", new: "अजून बोलावले नाही", rejected: "नाकारले" },
+    hello: (n) => n ? `नमस्कार ${n},\n\n` : "", bad: "ही लिंक चालत नाही. बॉटला *catalogue* पाठवा.", onlySup: "फक्त सप्लायर रीसेलर बोलवू शकतात.", fail: "काहीतरी चुकलं. पुन्हा प्रयत्न करा." },
+};
+let L = T.en, data = null;
+const $ = (id) => document.getElementById(id);
+const esc = RR.esc;
+function toast(m, ms = 3000) { const t = $("toast"); t.textContent = m; t.style.display = "block"; clearTimeout(t._h); t._h = setTimeout(() => (t.style.display = "none"), ms); }
+
+function tr() {
+  for (const k of ["h", "sT", "sS", "sJ", "w1", "w2", "pasteH", "listH"]) { const el = $(k === "sT" || k === "sS" || k === "sJ" ? k + "l" : k); if (el) el.textContent = L[k]; }
+  $("back").textContent = L.back; $("hint").innerHTML = L.hint; $("addPaste").textContent = L.add; $("next").textContent = L.next;
+}
+const stOf = (c) => c.status === "approved" ? "joined" : c.status === "pending" ? "pending" : c.status === "rejected" ? "rejected" : c.sent_at ? "sent" : "new";
+const pretty = (p) => p.length === 12 && p.startsWith("91") ? `+91 ${p.slice(2, 7)} ${p.slice(7)}` : "+" + p;
+
+function render() {
+  const cs = data?.contacts || [];
+  $("sT").textContent = cs.length;
+  $("sS").textContent = cs.filter((c) => c.sent_at || c.status).length;
+  $("sJ").textContent = cs.filter((c) => c.status === "approved").length;
+  const left = cs.filter((c) => stOf(c) === "new").length;
+  $("info").textContent = cs.length ? (left ? L.left(left) : L.allSent) : "";
+  $("next").disabled = !left;
+  $("list").innerHTML = cs.length ? cs.map((c) => {
+    const s = stOf(c);
+    return `<div class="c"><div class="who"><b>${esc(c.name || pretty(c.phone))}</b><small>${c.name ? pretty(c.phone) + " · " : ""}<span class="pill ${s === "joined" ? "g" : s === "pending" ? "w" : s === "sent" ? "i" : ""}">${L.st[s]}</span></small></div>
+      ${s === "joined" ? "" : `<button class="btn ${s === "new" ? "" : "ghost"}" data-p="${c.phone}">${s === "new" ? L.send : L.resend}</button>`}</div>`;
+  }).join("") : `<div class="empty">${L.none}</div>`;
+}
+
+async function addContacts(list) {
+  if (!list.length) return;
+  try {
+    data = await RR.call("invites", { contacts: list });
+    render(); toast(L.added(data.added, data.skipped), 4000);
+  } catch { toast(L.fail); }
+}
+
+// One tap opens WhatsApp with this person's own invite ready to send.
+function invite(phone) {
+  const c = (data?.contacts || []).find((x) => x.phone === phone);
+  const text = L.hello(c?.name?.split(" ")[0]) + data.invite;
+  RR.call("sent", { phone }).catch(() => null);
+  if (c) c.sent_at = c.sent_at || new Date().toISOString();
+  render();
+  location.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+$("list").addEventListener("click", (e) => { const b = e.target.closest("[data-p]"); if (b) invite(b.dataset.p); });
+$("next").addEventListener("click", () => { const c = (data?.contacts || []).find((x) => stOf(x) === "new"); if (c) invite(c.phone); });
+
+// Phone contact picker (Android Chrome)
+$("pick").addEventListener("click", async () => {
+  if (!("contacts" in navigator && "select" in navigator.contacts)) { toast(L.nopick, 5000); return; }
+  try {
+    const got = await navigator.contacts.select(["name", "tel"], { multiple: true });
+    addContacts(got.flatMap((c) => (c.tel || []).slice(0, 1).map((tel) => ({ name: (c.name || [])[0] || "", phone: tel }))));
+  } catch { /* cancelled */ }
+});
+
+// "Name, number" or "Name 98765 43210" per line
+function parseLines(text) {
+  return text.split(/\n+/).map((l) => {
+    const m = l.match(/(\+?\d[\d\s\-()]{8,}\d)/);
+    if (!m) return null;
+    return { phone: m[1], name: l.replace(m[1], "").replace(/[,;:\-–|]+/g, " ").trim() };
+  }).filter(Boolean);
+}
+function parseVcf(text) {
+  const out = [];
+  for (const card of text.split(/BEGIN:VCARD/i).slice(1)) {
+    const fn = (card.match(/^FN[^:]*:(.*)$/im) || [])[1] || "";
+    const tel = (card.match(/^TEL[^:]*:(.*)$/im) || [])[1];
+    if (tel) out.push({ name: fn.trim(), phone: tel.trim() });
+  }
+  return out;
+}
+$("addPaste").addEventListener("click", () => { addContacts(parseLines($("paste").value)); $("paste").value = ""; });
+$("fFile").addEventListener("change", async (e) => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    if (/\.vcf$/i.test(f.name)) return addContacts(parseVcf(await f.text()));
+    if (/\.txt$/i.test(f.name)) return addContacts(parseLines(await f.text()));
+    const rows = await RR.readSheet(f);
+    addContacts(rows.map((r) => {
+      const keys = Object.keys(r);
+      const pk = keys.find((k) => /phone|mobile|number|whatsapp|contact|फ़ोन|फोन|मोबाइल|नंबर/.test(k)) || keys.find((k) => /\d{10}/.test(String(r[k]).replace(/\D/g, "")));
+      const nk = keys.find((k) => /name|नाम|नाव/.test(k));
+      return pk ? { phone: r[pk], name: nk ? r[nk] : "" } : null;
+    }).filter(Boolean));
+  } catch { toast(L.fail); }
+});
+
+(async () => {
+  $("back").href = `./?c=${encodeURIComponent(RR.tok)}`;
+  try {
+    const d = await RR.info();
+    L = { ...T.en, ...(T[d.lang] || {}) };
+    document.documentElement.lang = d.lang || "en";
+    $("shop").textContent = d.shop || "";
+    tr();
+    if (d.role !== "supplier") { $("main").innerHTML = `<div class="empty">${L.onlySup}</div>`; $("next").hidden = true; return; }
+    data = await RR.call("invites", { contacts: [] });
+    render();
+  } catch { tr(); $("main").innerHTML = `<div class="empty">${L.bad}</div>`; $("next").hidden = true; }
+})();
+document.addEventListener("visibilitychange", async () => { if (!document.hidden && data) { try { data = await RR.call("invites", { contacts: [] }); render(); } catch {} } });
+</script>
+</body>
+</html>

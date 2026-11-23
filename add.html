@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="robots" content="noindex">
+<title>Add products · Resell Ready</title>
+<style>
+  :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --brand-soft:#e6f4f1; --bg:#f6f7f8; --warn:#b45309; --bad:#b91c1c; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari",sans-serif; color:var(--ink); background:var(--bg); padding-bottom:110px; }
+  header { background:var(--brand); color:#fff; padding:14px 16px 12px; position:sticky; top:0; z-index:5; }
+  header h1 { margin:0; font-size:19px; } header p { margin:3px 0 0; font-size:13px; opacity:.9; } header a { color:#fff; }
+  main { max-width:760px; margin:0 auto; padding:12px; display:grid; gap:12px; }
+  .ways { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .way { background:#fff; border:1px solid var(--line); border-radius:12px; padding:12px 8px; text-align:center; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; }
+  .way span { display:block; font-size:24px; margin-bottom:4px; }
+  .hint { background:var(--brand-soft); border-radius:10px; padding:10px 12px; font-size:13.5px; line-height:1.45; }
+  .hint a { color:var(--brand); font-weight:600; }
+  .p { background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px; display:grid; gap:8px; }
+  .p.bad { border-color:#fca5a5; }
+  .p .top { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--muted); }
+  .p .top button { border:0; background:none; color:var(--muted); font-size:13px; padding:4px 6px; cursor:pointer; }
+  .thumbs { display:flex; gap:6px; overflow-x:auto; }
+  .th { position:relative; flex:none; width:74px; height:92px; border-radius:8px; overflow:hidden; background:#eef0f2; }
+  .th img, .th video { width:100%; height:100%; object-fit:cover; }
+  .th b { position:absolute; right:2px; top:2px; width:22px; height:22px; border-radius:50%; background:rgba(0,0,0,.6); color:#fff; font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .th i { position:absolute; left:4px; bottom:4px; color:#fff; font-style:normal; font-size:12px; text-shadow:0 0 3px #000; }
+  .addph { flex:none; width:74px; height:92px; border:1.5px dashed var(--line); border-radius:8px; background:#fafafa; color:var(--muted); font-size:24px; cursor:pointer; }
+  .row { display:grid; grid-template-columns:2fr 1fr; gap:8px; }
+  input, textarea { width:100%; font:inherit; font-size:15px; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:#fff; }
+  textarea { min-height:58px; resize:vertical; }
+  .warn { color:var(--bad); font-size:13px; }
+  .foot { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:10px; align-items:center; z-index:6; }
+  .foot .info { flex:1; font-size:13.5px; color:var(--muted); }
+  .go { background:var(--brand); color:#fff; border:0; border-radius:10px; padding:12px 18px; font-size:15px; font-weight:700; cursor:pointer; }
+  .go:disabled { opacity:.5; }
+  .bar { height:6px; background:#eef0f2; border-radius:999px; overflow:hidden; margin-top:4px; } .bar i { display:block; height:100%; width:0; background:var(--brand); transition:width .2s; }
+  .done { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; font-size:15px; line-height:1.5; }
+  .done a { color:var(--brand); font-weight:600; }
+  .empty { text-align:center; color:var(--muted); padding:28px 12px; font-size:14px; }
+</style>
+</head>
+<body>
+<header><h1 id="h">Add products</h1><p><span id="shop"></span> · <a id="back" href="#">← Catalogue</a></p></header>
+<main>
+  <div class="ways">
+    <label class="way"><span>📷</span><b id="w1">Photos</b><input id="fPhotos" type="file" accept="image/*,video/*" multiple hidden></label>
+    <label class="way"><span>📊</span><b id="w2">Excel / CSV</b><input id="fSheet" type="file" accept=".xlsx,.xls,.csv,.ods" hidden></label>
+    <label class="way"><span>📄</span><b id="w3">Word file</b><input id="fWord" type="file" accept=".docx" hidden></label>
+  </div>
+  <div class="hint" id="hint"></div>
+  <div id="list"></div>
+</main>
+<input id="fMore" type="file" accept="image/*,video/*" multiple hidden>
+<input id="fMatch" type="file" accept="image/*,video/*" multiple hidden>
+<div class="foot"><div class="info"><span id="cnt"></span><div class="bar" id="bar" hidden><i id="barI"></i></div></div><button class="go" id="go" disabled>Upload</button></div>
+
+<script src="lib/up.js"></script>
+<script>
+const T = {
+  en: { h: "Add products", w1: "Photos", w2: "Excel / CSV", w3: "Word file", back: "← Catalogue",
+    hint: `Three ways to add many products at once:<br>📷 <b>Photos</b>: pick photos and videos from your phone, then type the name and price under each.<br>📊 <b>Excel</b>: one row per product with columns <b>Name, Price, Sizes, Details, Photos</b> (photo file names). <a id="tpl" href="#">Download the sample sheet</a>. After the sheet, pick the photos.<br>📄 <b>Word</b>: each picture starts a product; the text under it becomes its name, price and details.`,
+    name: "Product name", price: "Price ₹", sizes: "Sizes (e.g. M L XL)", details: "Details (fabric, colour…)", prod: (n) => `Product ${n}`,
+    merge: "↑ Join with above", del: "Remove", nophoto: "Add at least one photo", count: (n) => `${n} product${n === 1 ? "" : "s"} ready`,
+    upload: (n) => `Upload ${n}`, uploading: (a, b) => `Uploading photos ${a} of ${b}…`, saving: "Saving products…",
+    pickNamed: (n) => `Now pick the ${n} photos named in your sheet.`, pickOrder: (n) => `Your sheet has no photo names. Pick ${n} photos in the same order as the rows.`,
+    big: (n) => `${n} video(s) skipped: bigger than 16 MB.`, none: "Nothing here yet. Choose one of the three ways above.",
+    done: (n) => `✅ <b>${n} product${n === 1 ? "" : "s"} added.</b> They are in your catalogue now, and resellers will see them.`,
+    held: (l) => `⏸️ Held for a check by Resell Ready (they will appear once approved): ${l}`, refused: (l) => `⛔ Not added, these break the rules: ${l}`,
+    more: "Add more", open: "Open catalogue", fail: "Upload failed. Check your internet and try again.", bad: "This link doesn't work. Send *catalogue* to the bot for a new one.",
+    onlySup: "Only suppliers can add products.", wordFail: "Could not read this Word file. Save it as .docx and try again.", sheetFail: "Could not read this sheet.",
+    norows: "No products found in the sheet. The first row must have the column names." },
+  hi: { h: "प्रोडक्ट जोड़ें", w1: "फ़ोटो", w2: "Excel / CSV", w3: "Word फ़ाइल", back: "← कैटलॉग",
+    hint: `एक साथ कई प्रोडक्ट जोड़ने के तीन तरीके:<br>📷 <b>फ़ोटो</b>: फ़ोन से फ़ोटो-वीडियो चुनें, फिर हर एक के नीचे नाम और कीमत लिखें।<br>📊 <b>Excel</b>: हर प्रोडक्ट की एक लाइन, कॉलम <b>Name, Price, Sizes, Details, Photos</b> (फ़ोटो फ़ाइल के नाम)। <a id="tpl" href="#">नमूना शीट डाउनलोड करें</a>। शीट के बाद फ़ोटो चुनें।<br>📄 <b>Word</b>: हर तस्वीर से नया प्रोडक्ट शुरू होता है; उसके नीचे का टेक्स्ट नाम, कीमत और जानकारी बनता है।`,
+    name: "प्रोडक्ट का नाम", price: "कीमत ₹", sizes: "साइज़ (जैसे M L XL)", details: "जानकारी (कपड़ा, रंग…)", prod: (n) => `प्रोडक्ट ${n}`,
+    merge: "↑ ऊपर वाले में जोड़ें", del: "हटाएँ", nophoto: "कम से कम एक फ़ोटो जोड़ें", count: (n) => `${n} प्रोडक्ट तैयार`,
+    upload: (n) => `${n} अपलोड करें`, uploading: (a, b) => `फ़ोटो अपलोड हो रही हैं ${a}/${b}…`, saving: "प्रोडक्ट सेव हो रहे हैं…",
+    pickNamed: (n) => `अब शीट में लिखी ${n} फ़ोटो चुनें।`, pickOrder: (n) => `शीट में फ़ोटो के नाम नहीं हैं। लाइनों के क्रम में ${n} फ़ोटो चुनें।`,
+    big: (n) => `${n} वीडियो छोड़े: 16 MB से बड़े।`, none: "अभी कुछ नहीं। ऊपर से कोई एक तरीका चुनें।",
+    done: (n) => `✅ <b>${n} प्रोडक्ट जुड़ गए।</b> अब ये आपके कैटलॉग में हैं और रीसेलर देखेंगे।`,
+    held: (l) => `⏸️ Resell Ready की जाँच के लिए रोके गए (मंज़ूरी के बाद दिखेंगे): ${l}`, refused: (l) => `⛔ नहीं जोड़े, ये नियमों के ख़िलाफ़ हैं: ${l}`,
+    more: "और जोड़ें", open: "कैटलॉग खोलें", fail: "अपलोड नहीं हुआ। इंटरनेट देखें और फिर कोशिश करें।", bad: "यह लिंक काम नहीं कर रहा। बॉट को *catalogue* भेजें।",
+    onlySup: "प्रोडक्ट सिर्फ़ सप्लायर जोड़ सकते हैं।", wordFail: "यह Word फ़ाइल पढ़ी नहीं गई। .docx में सेव करके फिर कोशिश करें।", sheetFail: "यह शीट पढ़ी नहीं गई।",
+    norows: "शीट में प्रोडक्ट नहीं मिले। पहली लाइन में कॉलम के नाम होने चाहिए।" },
+  mr: { h: "प्रॉडक्ट जोडा", w1: "फोटो", w2: "Excel / CSV", w3: "Word फाइल", back: "← कॅटलॉग",
+    hint: `एकाच वेळी अनेक प्रॉडक्ट जोडण्याचे तीन मार्ग:<br>📷 <b>फोटो</b>: फोनमधून फोटो-व्हिडिओ निवडा, मग प्रत्येकाखाली नाव आणि किंमत लिहा.<br>📊 <b>Excel</b>: प्रत्येक प्रॉडक्टची एक ओळ, कॉलम <b>Name, Price, Sizes, Details, Photos</b> (फोटो फाइलची नावे). <a id="tpl" href="#">नमुना शीट डाउनलोड करा</a>. शीटनंतर फोटो निवडा.<br>📄 <b>Word</b>: प्रत्येक चित्रापासून नवा प्रॉडक्ट सुरू होतो; त्याखालचा मजकूर नाव, किंमत आणि माहिती होतो.`,
+    name: "प्रॉडक्टचे नाव", price: "किंमत ₹", sizes: "साइज (उदा. M L XL)", details: "माहिती (कापड, रंग…)", prod: (n) => `प्रॉडक्ट ${n}`,
+    merge: "↑ वरच्यात जोडा", del: "काढा", nophoto: "किमान एक फोटो जोडा", count: (n) => `${n} प्रॉडक्ट तयार`,
+    upload: (n) => `${n} अपलोड करा`, uploading: (a, b) => `फोटो अपलोड होत आहेत ${a}/${b}…`, saving: "प्रॉडक्ट सेव्ह होत आहेत…",
+    pickNamed: (n) => `आता शीटमध्ये लिहिलेले ${n} फोटो निवडा.`, pickOrder: (n) => `शीटमध्ये फोटोची नावे नाहीत. ओळींच्या क्रमाने ${n} फोटो निवडा.`,
+    big: (n) => `${n} व्हिडिओ सोडले: 16 MB पेक्षा मोठे.`, none: "अजून काही नाही. वरून एक मार्ग निवडा.",
+    done: (n) => `✅ <b>${n} प्रॉडक्ट जोडले.</b> ते आता तुमच्या कॅटलॉगमध्ये आहेत आणि रीसेलरना दिसतील.`,
+    held: (l) => `⏸️ Resell Ready च्या तपासणीसाठी थांबवले (मंजुरीनंतर दिसतील): ${l}`, refused: (l) => `⛔ जोडले नाहीत, हे नियमांविरुद्ध आहेत: ${l}`,
+    more: "आणखी जोडा", open: "कॅटलॉग उघडा", fail: "अपलोड झाले नाही. इंटरनेट तपासा आणि पुन्हा प्रयत्न करा.", bad: "ही लिंक चालत नाही. बॉटला *catalogue* पाठवा.",
+    onlySup: "प्रॉडक्ट फक्त सप्लायर जोडू शकतात.", wordFail: "ही Word फाइल वाचता आली नाही. .docx म्हणून सेव्ह करून पुन्हा प्रयत्न करा.", sheetFail: "ही शीट वाचता आली नाही.",
+    norows: "शीटमध्ये प्रॉडक्ट सापडले नाहीत. पहिल्या ओळीत कॉलमची नावे हवीत." },
+};
+let L = T.en;
+const $ = (id) => document.getElementById(id);
+const esc = RR.esc;
+const MAXV = 16 * 1024 * 1024;
+let items = [];          // { name, price, sizes, details, files: File[] }
+let moreFor = -1, pendingRows = null;
+
+function tr() {
+  $("h").textContent = L.h; $("w1").textContent = L.w1; $("w2").textContent = L.w2; $("w3").textContent = L.w3; $("back").textContent = L.back;
+  $("hint").innerHTML = L.hint;
+  $("tpl").onclick = (e) => {
+    e.preventDefault();
+    const csv = "Name,Price,Sizes,Details,Photos\nRayon kurti with dupatta,599,M L XL XXL,\"Pure rayon, printed dupatta\",kurti1.jpg kurti2.jpg\nCotton saree,1200,Free size,Soft cotton with blouse piece,saree.jpg\n";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv" }));
+    a.download = "products-sample.csv"; a.click();
+  };
+}
+
+const urlOf = new WeakMap();
+const src = (f) => { if (!urlOf.has(f)) urlOf.set(f, URL.createObjectURL(f)); return urlOf.get(f); };
+function render() {
+  const ok = items.filter((p) => p.files.length).length;
+  $("cnt").textContent = L.count(ok);
+  $("go").textContent = L.upload(ok);
+  $("go").disabled = !ok;
+  if (!items.length) { $("list").innerHTML = `<div class="empty">${L.none}</div>`; return; }
+  $("list").innerHTML = items.map((p, i) => `
+    <div class="p ${p.files.length ? "" : "bad"}" data-i="${i}">
+      <div class="top"><span>${L.prod(i + 1)}</span><span>${i ? `<button data-a="merge">${L.merge}</button>` : ""}<button data-a="del">✕ ${L.del}</button></span></div>
+      <div class="thumbs">${p.files.map((f, j) => `<div class="th">${/^video/.test(f.type) ? `<video src="${src(f)}#t=0.5" muted preload="metadata"></video><i>▶</i>` : `<img src="${src(f)}" alt="">`}<b data-a="rm" data-j="${j}">×</b></div>`).join("")}
+        <button class="addph" data-a="more">＋</button></div>
+      ${p.files.length ? "" : `<div class="warn">${L.nophoto}</div>`}
+      <div class="row"><input data-f="name" value="${esc(p.name)}" placeholder="${L.name}"><input data-f="price" inputmode="decimal" value="${esc(p.price)}" placeholder="${L.price}"></div>
+      <input data-f="sizes" value="${esc(p.sizes)}" placeholder="${L.sizes}">
+      <textarea data-f="details" placeholder="${L.details}">${esc(p.details)}</textarea>
+    </div>`).join("");
+}
+
+function okFiles(list) {
+  const files = [...list].filter((f) => /^(image|video)\//.test(f.type));
+  const big = files.filter((f) => /^video/.test(f.type) && f.size > MAXV);
+  if (big.length) alert(L.big(big.length));
+  return files.filter((f) => !big.includes(f));
+}
+const blank = (files = []) => ({ name: "", price: "", sizes: "", details: "", files });
+
+// Pulls name, price and sizes out of free text (Word files, sheet details).
+function fromText(text) {
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  let price = "", sizes = "";
+  const rest = [];
+  for (const l of lines) {
+    const m = !price && l.match(/(?:₹|\brs\.?|\binr\b|\bprice\b|\brate\b)\s*[:\-=]?\s*(\d[\d,]*(?:\.\d+)?)|(\d[\d,]*)\s*\/-/i);
+    if (m && !/mrp/i.test(l)) { price = (m[1] || m[2]).replace(/,/g, ""); const left = l.replace(m[0], " ").replace(/\b(price|rate|rs|inr|only)\b\.?/gi, " ").replace(/\s{2,}/g, " ").replace(/^[\s:\-–|]+|[\s:\-–|]+$/g, ""); if (left) rest.push(left); continue; }
+    const s = !sizes && l.match(/^(?:sizes?|साइज़?|साईज)\s*[:\-]?\s*(.+)$/i);
+    if (s) { sizes = s[1]; continue; }
+    rest.push(l);
+  }
+  return { name: (rest.shift() || "").slice(0, 80), price, sizes, details: rest.join("\n") };
+}
+
+$("list").addEventListener("input", (e) => {
+  const f = e.target.dataset.f; if (!f) return;
+  items[+e.target.closest(".p").dataset.i][f] = e.target.value;
+});
+$("list").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-a]"); if (!b) return;
+  const i = +b.closest(".p").dataset.i, a = b.dataset.a;
+  if (a === "del") items.splice(i, 1);
+  else if (a === "rm") items[i].files.splice(+b.dataset.j, 1);
+  else if (a === "merge") { const p = items.splice(i, 1)[0]; const q = items[i - 1]; q.files.push(...p.files); for (const k of ["name", "price", "sizes", "details"]) if (!q[k]) q[k] = p[k]; }
+  else if (a === "more") { moreFor = i; $("fMore").click(); return; }
+  render();
+});
+$("fMore").addEventListener("change", (e) => { if (moreFor >= 0) items[moreFor].files.push(...okFiles(e.target.files)); e.target.value = ""; render(); });
+$("fPhotos").addEventListener("change", (e) => { for (const f of okFiles(e.target.files)) items.push(blank([f])); e.target.value = ""; render(); });
+
+// Excel / CSV
+const col = (row, names) => { for (const n of names) for (const k of Object.keys(row)) if (k === n || k.startsWith(n)) return row[k]; return ""; };
+$("fSheet").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; e.target.value = ""; if (!file) return;
+  let rows;
+  try { rows = await RR.readSheet(file); } catch { alert(L.sheetFail); return; }
+  rows = rows.map((r) => ({
+    name: col(r, ["name", "product", "title", "item", "नाम", "नाव"]), price: String(col(r, ["price", "rate", "selling", "कीमत", "किंमत", "दर"])).replace(/[^\d.]/g, ""),
+    sizes: col(r, ["size", "साइज"]), details: col(r, ["detail", "desc", "about", "fabric", "जानकारी", "माहिती"]),
+    photos: col(r, ["photo", "image", "picture", "file", "फ़ोटो", "फोटो"]).split(/[,;\s]+/).map((s) => s.trim().toLowerCase()).filter(Boolean),
+  })).filter((r) => r.name || r.price || r.details);
+  if (!rows.length) { alert(L.norows); return; }
+  pendingRows = rows;
+  const named = rows.some((r) => r.photos.length);
+  alert(named ? L.pickNamed(rows.reduce((n, r) => n + r.photos.length, 0)) : L.pickOrder(rows.length));
+  $("fMatch").click();
+});
+$("fMatch").addEventListener("change", (e) => {
+  const files = okFiles(e.target.files); e.target.value = "";
+  const rows = pendingRows || []; pendingRows = null;
+  const named = rows.some((r) => r.photos.length);
+  const byName = new Map();
+  for (const f of files) { const n = f.name.toLowerCase(); byName.set(n, f); byName.set(n.replace(/\.[a-z0-9]+$/, ""), f); }
+  rows.forEach((r, i) => {
+    const fs = named ? r.photos.map((n) => byName.get(n) || byName.get(n.replace(/\.[a-z0-9]+$/, ""))).filter(Boolean) : (files[i] ? [files[i]] : []);
+    items.push({ name: r.name, price: r.price, sizes: r.sizes, details: r.details, files: fs });
+  });
+  render();
+});
+
+// Word (.docx): pictures start products, the text after each picture describes it.
+$("fWord").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; e.target.value = ""; if (!file) return;
+  try {
+    if (!window.JSZip) await RR.loadScript("lib/jszip.min.js");
+    const zip = await JSZip.loadAsync(await file.arrayBuffer());
+    const xml = new DOMParser().parseFromString(await zip.file("word/document.xml").async("string"), "application/xml");
+    const relsXml = new DOMParser().parseFromString(await zip.file("word/_rels/document.xml.rels").async("string"), "application/xml");
+    const rels = {};
+    for (const r of relsXml.getElementsByTagName("Relationship")) rels[r.getAttribute("Id")] = r.getAttribute("Target");
+    const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    // the file in order, as runs of pictures and runs of text
+    const seq = [];
+    const push = (type, v) => { const last = seq[seq.length - 1]; if (last && last.type === type) type === "img" ? last.files.push(v) : (last.text += v); else seq.push(type === "img" ? { type, files: [v] } : { type, text: v }); };
+    for (const p of xml.getElementsByTagNameNS(W, "p")) {
+      for (const b of [...p.getElementsByTagName("*")].filter((n) => n.localName === "blip")) {
+        const id = b.getAttribute("r:embed") || b.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "embed");
+        const target = rels[id]; if (!target) continue;
+        const path = "word/" + target.replace(/^\.?\//, "").replace(/^word\//, "");
+        const ext = path.split(".").pop().toLowerCase();
+        if (!["jpg", "jpeg", "png", "webp"].includes(ext) || !zip.file(path)) continue;
+        const blob = await zip.file(path).async("blob");
+        push("img", new File([blob], path.split("/").pop(), { type: ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg" }));
+      }
+      const text = [...p.getElementsByTagNameNS(W, "t")].map((t) => t.textContent).join("").trim();
+      if (text) push("text", text + "\n");
+    }
+    // Text under each picture is the usual layout. If the file starts with text and ends with a picture,
+    // the text sits above each picture instead.
+    const above = seq.length > 1 && seq[0].type === "text" && seq[seq.length - 1].type === "img";
+    const found = [];
+    seq.forEach((x, i) => {
+      if (x.type !== "img") return;
+      const t = above ? seq[i - 1] : seq[i + 1];
+      found.push({ files: x.files, text: t && t.type === "text" ? t.text : "" });
+    });
+    if (!found.length) { alert(L.wordFail); return; }
+    for (const f of found) items.push({ ...fromText(f.text), files: f.files });
+    render();
+  } catch (err) { console.error(err); alert(L.wordFail); }
+});
+
+function caption(p) {
+  return [p.name.trim(), p.price ? `Rs ${String(p.price).replace(/[^\d.]/g, "")}` : "", p.sizes.trim() ? `Size: ${p.sizes.trim()}` : "", p.details.trim()].filter(Boolean).join("\n");
+}
+
+$("go").addEventListener("click", async () => {
+  const ready = items.filter((p) => p.files.length);
+  if (!ready.length) return;
+  $("go").disabled = true; $("bar").hidden = false;
+  try {
+    const all = ready.flatMap((p) => p.files);
+    const blobs = [];
+    for (const f of all) blobs.push(/^video/.test(f.type) ? f : await RR.shrink(f));
+    const paths = await RR.upload(blobs, "product", (a, b) => { $("cnt").textContent = L.uploading(a, b); $("barI").style.width = `${(a / b) * 90}%`; });
+    let k = 0;
+    const products = ready.map((p) => ({
+      text: caption(p),
+      media: p.files.map((f) => { const path = paths[k]; const b = blobs[k++]; return path ? { path, kind: /^video/.test(f.type) ? "video" : "image", mime: b.type || f.type } : null; }).filter(Boolean),
+    })).filter((p) => p.media.length);
+    $("cnt").textContent = L.saving;
+    let added = 0; const held = [], refused = [];
+    for (let i = 0; i < products.length; i += 25) {
+      const r = await RR.call("products", { products: products.slice(i, i + 25) });
+      added += r.added || 0; held.push(...(r.held || [])); refused.push(...(r.refused || []));
+    }
+    $("barI").style.width = "100%";
+    items = [];
+    $("list").innerHTML = `<div class="done">${L.done(added)}${held.length ? `<br>${esc(L.held(held.join(", ")))}` : ""}${refused.length ? `<br>${esc(L.refused(refused.join(", ")))}` : ""}
+      <br><br><a href="./?c=${encodeURIComponent(RR.tok)}">${L.open} →</a> · <a href="#" id="again">${L.more}</a></div>`;
+    $("again").onclick = (e) => { e.preventDefault(); render(); };
+    $("cnt").textContent = ""; $("go").textContent = L.upload(0);
+  } catch (err) {
+    console.error(err); alert(L.fail); $("go").disabled = false;
+  } finally { setTimeout(() => ($("bar").hidden = true), 800); }
+});
+
+(async () => {
+  $("back").href = `./?c=${encodeURIComponent(RR.tok)}`;
+  try {
+    const d = await RR.info();
+    L = { ...T.en, ...(T[d.lang] || {}) };
+    document.documentElement.lang = d.lang || "en";
+    $("shop").textContent = d.shop || "";
+    tr();
+    if (d.role !== "supplier") { $("list").innerHTML = `<div class="empty">${L.onlySup}</div>`; document.querySelector(".ways").hidden = true; return; }
+    render();
+  } catch (e) { tr(); $("list").innerHTML = `<div class="empty">${L.bad}</div>`; document.querySelector(".ways").hidden = true; }
+})();
+</script>
+</body>
+</html>
