@@ -235,7 +235,7 @@ async function showEnded() {
     const r = await RR.call("expired", {});
     $("endedL").innerHTML = r.products?.length ? r.products.map((p) => `<div class="erow"><img src="${esc(p.img || "")}" alt="" loading="lazy">
       <div><b>${esc(p.title)}</b><small>${esc([p.code, p.price ? rupees(p.price) : "", p.ended && p.ended !== "infinity" ? L.endedOn(fmtDay(p.ended)) : ""].filter(Boolean).join(" · "))}</small></div>
-      <button data-relist="${p.key}">${L.relist}</button></div>`).join("") : `<div class="empty">${L.endedNone}</div>`;
+      <button data-relist="${p.key}" data-ids="${(p.ids || []).join(",")}">${L.relist}</button></div>`).join("") : `<div class="empty">${L.endedNone}</div>`;
   } catch { $("endedL").innerHTML = `<div class="empty">${L.tryAgain}</div>`; }
 }
 $("endedX").addEventListener("click", () => { $("endedBox").hidden = true; });
@@ -243,7 +243,7 @@ $("endedBox").addEventListener("click", async (e) => {
   if (e.target.id === "endedBox") { $("endedBox").hidden = true; return; }
   const b = e.target.closest("[data-relist]"); if (!b) return;
   b.disabled = true;
-  try { await RR.call("relist", { key: Number(b.dataset.relist), days: 7 }); b.closest(".erow").remove(); toast(L.relistOk, 3000); load(); }
+  try { await RR.call("relist", { key: Number(b.dataset.relist), ids: (b.dataset.ids || "").split(",").map(Number).filter(Boolean), days: 7 }); b.closest(".erow").remove(); toast(L.relistOk, 3000); load(); }
   catch { b.disabled = false; toast(L.tryAgain, 3500); }
 });
 
