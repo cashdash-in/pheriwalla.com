@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="robots" content="noindex">
+<title>Order</title>
+<style>
+  :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --brand-soft:#e6f4f1; --bg:#f6f7f8; --bad:#b91c1c; --warn:#9a3412; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari",sans-serif; color:var(--ink); background:var(--bg); padding-bottom:96px; }
+  header { background:var(--brand); color:#fff; padding:12px 16px; display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:5; }
+  header img { width:34px; height:34px; border-radius:8px; background:#fff; object-fit:contain; }
+  header b { font-size:17px; } header small { display:block; font-size:12.5px; opacity:.9; }
+  header a { margin-left:auto; color:#fff; font-size:13px; border:1px solid rgba(255,255,255,.6); border-radius:999px; padding:5px 10px; text-decoration:none; white-space:nowrap; }
+  main { max-width:620px; margin:0 auto; padding:12px; display:grid; gap:12px; }
+  .box { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .gal { display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; border-radius:12px; }
+  .gal > * { flex:none; width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:12px; scroll-snap-align:start; background:#e5e7eb; }
+  .gal.many > * { width:86%; }
+  h1 { font-size:19px; margin:2px 0 4px; } .price { font-size:24px; font-weight:800; color:var(--brand); }
+  .desc { white-space:pre-line; font-size:14px; color:#374151; line-height:1.45; margin-top:8px; }
+  .lbl { font-size:13.5px; font-weight:600; margin:0 0 6px; display:block; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { border:1.5px solid var(--line); background:#fff; border-radius:10px; padding:9px 14px; font-size:15px; cursor:pointer; font-family:inherit; }
+  .chip.on { border-color:var(--brand); background:var(--brand-soft); font-weight:700; }
+  .qty { display:inline-flex; align-items:center; border:1.5px solid var(--line); border-radius:10px; overflow:hidden; }
+  .qty button { width:44px; height:42px; border:0; background:#f9fafb; font-size:20px; cursor:pointer; }
+  .qty span { width:48px; text-align:center; font-size:17px; font-weight:700; }
+  input, textarea { width:100%; font:inherit; font-size:16px; padding:11px 12px; border:1.5px solid var(--line); border-radius:10px; background:#fff; }
+  textarea { min-height:74px; resize:vertical; }
+  .f { display:grid; gap:10px; } .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .err { color:var(--bad); font-size:13.5px; min-height:0; }
+  .sum { display:grid; gap:4px; font-size:14.5px; } .sum div { display:flex; justify-content:space-between; }
+  .sum .t { font-size:17px; font-weight:800; border-top:1px solid var(--line); padding-top:6px; margin-top:4px; }
+  .terms { font-size:12.5px; color:var(--muted); } .terms a { color:var(--brand); }
+  .foot { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); padding:10px 12px calc(10px + env(safe-area-inset-bottom)); display:flex; gap:10px; align-items:center; z-index:6; }
+  .foot[hidden], header a[hidden], header img[hidden] { display:none; }
+  .foot .info { flex:1; font-size:13px; color:var(--muted); } .foot .info b { display:block; font-size:18px; color:var(--ink); }
+  .go { background:var(--brand); color:#fff; border:0; border-radius:12px; padding:14px 22px; font-size:16px; font-weight:800; cursor:pointer; font-family:inherit; text-decoration:none; display:inline-block; text-align:center; }
+  .go:disabled { opacity:.55; } .go.ghost { background:#fff; color:var(--brand); border:1.5px solid var(--brand); }
+  .center { text-align:center; } .big { font-size:42px; }
+  .steps { display:grid; gap:0; } .st { display:flex; gap:10px; align-items:flex-start; padding:6px 0; color:var(--muted); font-size:14.5px; }
+  .st i { width:22px; height:22px; border-radius:50%; border:2px solid var(--line); flex:none; margin-top:1px; }
+  .st.done { color:var(--ink); } .st.done i { background:var(--brand); border-color:var(--brand); }
+  .st.now { color:var(--ink); font-weight:700; } .st.now i { border-color:var(--brand); box-shadow:inset 0 0 0 4px #fff; background:var(--brand); }
+  .note { background:#fff7ed; color:var(--warn); border-radius:10px; padding:10px 12px; font-size:14px; }
+  .qr { width:220px; max-width:70%; border-radius:12px; border:1px solid var(--line); display:block; margin:8px auto; }
+  .empty { text-align:center; color:var(--muted); padding:60px 20px; font-size:15px; line-height:1.5; }
+  .muted { color:var(--muted); font-size:13.5px; }
+</style>
+</head>
+<body>
+<header><img id="logo" alt="" hidden><div><b id="shop">…</b><small id="sub"></small></div><a id="chat" hidden></a></header>
+<main id="main"><div class="empty">…</div></main>
+<div class="foot" id="foot" hidden><div class="info" id="finfo"></div><button class="go" id="place"></button></div>
+
+<script>
+const API = "https://obgedilcyvaaewpvvdzi.supabase.co/functions/v1/shop";
+const qs = new URLSearchParams(location.search);
+const TOK = qs.get("t"), KEY = qs.get("k");
+const T = {
+  en: { sub: "Secure order page", chat: "💬 Chat", size: "Select size", qty: "Quantity", details: "Delivery details", name: "Full name", phone: "WhatsApp / mobile number (10 digits)",
+    addr: "House / flat, street, area, city", pin: "PIN code", pay: "Payment", cod: "Cash on delivery", upi: "Pay by UPI", price: "Price", delivery: "Delivery", free: "Free", total: "Total",
+    tbc: "Price to be confirmed by the seller", place: "Place order", placing: "Placing your order…", terms: (u) => `By placing this order, you agree to our <a href="${u}" target="_blank" rel="noopener">terms</a>.`,
+    e_size: "Please select a size.", e_name: "Please enter your name.", e_phone: "Please enter a valid 10-digit mobile number.", e_address: "Please enter your full address and a 6-digit PIN code.",
+    e_pay: "Please choose a payment method.", e_slow: "You have placed several orders just now. Please wait a few minutes and try again.", e_sold_out: "We're sorry, this product has just sold out.",
+    e_try: "We're sorry, something went wrong. Please try again.", gone: "We're sorry, this order link is no longer active. Please contact the seller who shared it with you.",
+    sold: (t) => `We're sorry, <b>${t}</b> is sold out.`, askSeller: "Please ask the seller about similar products.",
+    thanks: "Thank you for your order!", orderNo: (id) => `Order #${id}`, codNote: (amt, shop) => `Please keep <b>${amt}</b> ready to pay in cash on delivery. ${shop} will confirm and dispatch your order shortly.`,
+    upiNote: (amt, shop) => `Please pay <b>${amt}</b> to ${shop} by UPI to confirm your order.`, payNow: "Pay now with UPI app", vpa: "UPI ID", paidBtn: "I have paid", paidThanks: "Thank you! The seller will verify your payment and confirm shortly.",
+    track: "Track this order", save: "Please save or bookmark this page to check your order status at any time.", status: "Order status",
+    st: { placed: "Order placed", sent_to_supplier: "Being confirmed", accepted: "Packed", dispatched: "Out for delivery", delivered: "Delivered", cancelled: "Cancelled", out_of_stock: "Out of stock" },
+    p_unpaid_cod: "Pay on delivery", p_unpaid_upi: "Payment pending", p_claimed: "Payment being verified", p_paid: "Paid ✅", courier: "Courier tracking",
+    stopped: "This order was cancelled. If you have already paid, the seller will contact you about a refund.", again: "Order again", deliverTo: "Delivering to" },
+  hi: { sub: "सुरक्षित ऑर्डर पेज", chat: "💬 चैट", size: "साइज़ चुनें", qty: "संख्या", details: "डिलीवरी की जानकारी", name: "पूरा नाम", phone: "WhatsApp / मोबाइल नंबर (10 अंक)",
+    addr: "मकान / फ़्लैट, गली, इलाका, शहर", pin: "पिन कोड", pay: "भुगतान", cod: "डिलीवरी पर नकद", upi: "UPI से भुगतान", price: "कीमत", delivery: "डिलीवरी", free: "मुफ़्त", total: "कुल",
+    tbc: "कीमत विक्रेता बताएंगे", place: "ऑर्डर करें", placing: "आपका ऑर्डर हो रहा है…", terms: (u) => `ऑर्डर करके आप हमारी <a href="${u}" target="_blank" rel="noopener">शर्तों</a> से सहमत होते हैं।`,
+    e_size: "कृपया साइज़ चुनें।", e_name: "कृपया अपना नाम लिखें।", e_phone: "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।", e_address: "कृपया पूरा पता और 6 अंकों का पिन कोड लिखें।",
+    e_pay: "कृपया भुगतान का तरीका चुनें।", e_slow: "आपने अभी कई ऑर्डर किए हैं। कृपया कुछ मिनट बाद फिर कोशिश करें।", e_sold_out: "माफ़ कीजिए, यह प्रोडक्ट अभी ख़त्म हो गया।",
+    e_try: "माफ़ कीजिए, कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।", gone: "माफ़ कीजिए, यह ऑर्डर लिंक अब चालू नहीं है। कृपया लिंक भेजने वाले विक्रेता से संपर्क करें।",
+    sold: (t) => `माफ़ कीजिए, <b>${t}</b> ख़त्म हो गया है।`, askSeller: "मिलते-जुलते प्रोडक्ट के लिए विक्रेता से पूछें।",
+    thanks: "आपके ऑर्डर के लिए धन्यवाद!", orderNo: (id) => `ऑर्डर #${id}`, codNote: (amt, shop) => `डिलीवरी पर नकद देने के लिए <b>${amt}</b> तैयार रखें। ${shop} जल्द ही ऑर्डर कन्फ़र्म करके भेजेंगे।`,
+    upiNote: (amt, shop) => `ऑर्डर पक्का करने के लिए कृपया ${shop} को UPI से <b>${amt}</b> भेजें।`, payNow: "UPI ऐप से अभी भुगतान करें", vpa: "UPI ID", paidBtn: "मैंने भुगतान कर दिया", paidThanks: "धन्यवाद! विक्रेता भुगतान जाँचकर जल्द कन्फ़र्म करेंगे।",
+    track: "यह ऑर्डर ट्रैक करें", save: "ऑर्डर की स्थिति कभी भी देखने के लिए कृपया यह पेज सेव या बुकमार्क कर लें।", status: "ऑर्डर की स्थिति",
+    st: { placed: "ऑर्डर हुआ", sent_to_supplier: "कन्फ़र्म हो रहा है", accepted: "पैक हो गया", dispatched: "डिलीवरी के लिए निकला", delivered: "डिलीवर हो गया", cancelled: "रद्द", out_of_stock: "स्टॉक ख़त्म" },
+    p_unpaid_cod: "डिलीवरी पर भुगतान", p_unpaid_upi: "भुगतान बाकी", p_claimed: "भुगतान की जाँच हो रही है", p_paid: "भुगतान हो गया ✅", courier: "कूरियर ट्रैकिंग",
+    stopped: "यह ऑर्डर रद्द हो गया। अगर आपने भुगतान कर दिया है, तो विक्रेता रिफ़ंड के लिए संपर्क करेंगे।", again: "फिर से ऑर्डर करें", deliverTo: "डिलीवरी का पता" },
+  mr: { sub: "सुरक्षित ऑर्डर पेज", chat: "💬 चॅट", size: "साइज निवडा", qty: "संख्या", details: "डिलिव्हरीची माहिती", name: "पूर्ण नाव", phone: "WhatsApp / मोबाइल नंबर (10 अंक)",
+    addr: "घर / फ्लॅट, गल्ली, भाग, शहर", pin: "पिन कोड", pay: "पेमेंट", cod: "डिलिव्हरीवर रोख", upi: "UPI ने पेमेंट", price: "किंमत", delivery: "डिलिव्हरी", free: "मोफत", total: "एकूण",
+    tbc: "किंमत विक्रेता सांगतील", place: "ऑर्डर करा", placing: "तुमची ऑर्डर होत आहे…", terms: (u) => `ऑर्डर करून तुम्ही आमच्या <a href="${u}" target="_blank" rel="noopener">अटी</a> मान्य करता.`,
+    e_size: "कृपया साइज निवडा.", e_name: "कृपया तुमचं नाव लिहा.", e_phone: "कृपया योग्य 10 अंकी मोबाइल नंबर लिहा.", e_address: "कृपया पूर्ण पत्ता आणि 6 अंकी पिन कोड लिहा.",
+    e_pay: "कृपया पेमेंटची पद्धत निवडा.", e_slow: "तुम्ही आत्ताच अनेक ऑर्डर केल्या आहेत. कृपया काही मिनिटांनी पुन्हा प्रयत्न करा.", e_sold_out: "माफ करा, हा प्रॉडक्ट आत्ताच संपला.",
+    e_try: "माफ करा, काहीतरी चुकलं. कृपया पुन्हा प्रयत्न करा.", gone: "माफ करा, ही ऑर्डर लिंक आता चालू नाही. कृपया लिंक पाठवणाऱ्या विक्रेत्याशी संपर्क करा.",
+    sold: (t) => `माफ करा, <b>${t}</b> संपला आहे.`, askSeller: "मिळत्याजुळत्या प्रॉडक्टसाठी विक्रेत्याला विचारा.",
+    thanks: "तुमच्या ऑर्डरबद्दल धन्यवाद!", orderNo: (id) => `ऑर्डर #${id}`, codNote: (amt, shop) => `डिलिव्हरीवर रोख देण्यासाठी <b>${amt}</b> तयार ठेवा. ${shop} लवकरच ऑर्डर कन्फर्म करून पाठवतील.`,
+    upiNote: (amt, shop) => `ऑर्डर पक्की करण्यासाठी कृपया ${shop} ला UPI ने <b>${amt}</b> पाठवा.`, payNow: "UPI ॲपने आत्ता पेमेंट करा", vpa: "UPI ID", paidBtn: "मी पेमेंट केलं", paidThanks: "धन्यवाद! विक्रेता पेमेंट तपासून लवकरच कन्फर्म करतील.",
+    track: "ही ऑर्डर ट्रॅक करा", save: "ऑर्डरची स्थिती कधीही पाहण्यासाठी कृपया हे पेज सेव्ह किंवा बुकमार्क करा.", status: "ऑर्डरची स्थिती",
+    st: { placed: "ऑर्डर झाली", sent_to_supplier: "कन्फर्म होत आहे", accepted: "पॅक झाली", dispatched: "डिलिव्हरीसाठी निघाली", delivered: "डिलिव्हर झाली", cancelled: "रद्द", out_of_stock: "स्टॉक संपला" },
+    p_unpaid_cod: "डिलिव्हरीवर पेमेंट", p_unpaid_upi: "पेमेंट बाकी", p_claimed: "पेमेंट तपासत आहेत", p_paid: "पेमेंट झालं ✅", courier: "कुरिअर ट्रॅकिंग",
+    stopped: "ही ऑर्डर रद्द झाली. तुम्ही पेमेंट केलं असेल तर विक्रेता परताव्यासाठी संपर्क करतील.", again: "पुन्हा ऑर्डर करा", deliverTo: "डिलिव्हरीचा पत्ता" },
+};
+let L = T.en, P = null, sel = { size: null, qty: 1, pay: null };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const rs = (n) => "₹" + Math.round(Number(n || 0)).toLocaleString("en-IN");
+const store = { get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+function head(d) {
+  L = T[d.lang] || T.en;
+  document.documentElement.lang = d.lang || "en";
+  document.title = d.shop || "Order";
+  $("shop").textContent = d.shop || ""; $("sub").textContent = L.sub;
+  if (d.logo) { $("logo").src = d.logo; $("logo").hidden = false; }
+  if (d.chat) { $("chat").href = d.chat; $("chat").textContent = L.chat; $("chat").hidden = false; }
+}
+const msg = (html) => { $("main").innerHTML = `<div class="empty">${html}</div>`; $("foot").hidden = true; };
+
+/* ---------------- order form ---------------- */
+function totals() {
+  const unit = P.price ? Number(P.price) : 0;
+  return { sub: unit * sel.qty, total: unit * sel.qty + Number(P.fee || 0) };
+}
+function renderForm() {
+  const saved = store.get("rr_customer") || {};
+  const g = P.media.map((m) => m.kind === "video" ? `<video src="${esc(m.url)}" controls playsinline preload="metadata"></video>` : `<img src="${esc(m.url)}" alt="">`).join("");
+  if (P.sizes.length === 1) sel.size = P.sizes[0];
+  $("main").innerHTML = `
+    ${g ? `<div class="gal ${P.media.length > 1 ? "many" : ""}">${g}</div>` : ""}
+    <div class="box"><h1>${esc(P.title)}</h1><div class="price">${P.price ? rs(P.price) : `<span class="muted">${L.tbc}</span>`}</div>
+      ${P.desc ? `<div class="desc">${esc(P.desc)}</div>` : ""}<p class="muted" style="margin:8px 0 0">${esc(P.code)}</p></div>
+    ${P.sizes.length ? `<div class="box"><span class="lbl">${L.size}</span><div class="chips" id="sizes">${P.sizes.map((s) => `<button class="chip ${sel.size === s ? "on" : ""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div></div>` : ""}
+    <div class="box"><span class="lbl">${L.qty}</span><div class="qty"><button data-q="-1">−</button><span id="qn">1</span><button data-q="1">+</button></div></div>
+    <div class="box f"><span class="lbl">${L.details}</span>
+      <input id="nm" autocomplete="name" placeholder="${L.name}" value="${esc(saved.name || "")}">
+      <input id="ph" inputmode="tel" autocomplete="tel" placeholder="${L.phone}" value="${esc(saved.phone || "")}">
+      <textarea id="ad" autocomplete="street-address" placeholder="${L.addr}">${esc(saved.address || "")}</textarea>
+      <div class="two"><input id="pn" inputmode="numeric" maxlength="6" autocomplete="postal-code" placeholder="${L.pin}" value="${esc(saved.pin || "")}"><span></span></div></div>
+    <div class="box"><span class="lbl">${L.pay}</span><div class="chips" id="pays">
+      <button class="chip" data-p="cod">💵 ${L.cod}</button>${P.upi ? `<button class="chip" data-p="upi">📱 ${L.upi}</button>` : ""}</div></div>
+    <div class="box sum" id="sum"></div>
+    <p class="terms">${L.terms(esc(P.terms))}</p>
+    <div class="err" id="err"></div>`;
+  if (!P.upi) sel.pay = "cod";
+  paint();
+  $("place").textContent = L.place; $("foot").hidden = false;
+}
+function paint() {
+  document.querySelectorAll("[data-s]").forEach((b) => b.classList.toggle("on", b.dataset.s === sel.size));
+  document.querySelectorAll("[data-p]").forEach((b) => b.classList.toggle("on", b.dataset.p === sel.pay));
+  if ($("qn")) $("qn").textContent = sel.qty;
+  const t = totals();
+  $("sum").innerHTML = `<div><span>${L.price}${P.price ? ` (${rs(P.price)} × ${sel.qty})` : ""}</span><span>${P.price ? rs(t.sub) : "—"}</span></div>
+    <div><span>${L.delivery}</span><span>${Number(P.fee) > 0 ? rs(P.fee) : L.free}</span></div>
+    <div class="t"><span>${L.total}</span><span>${rs(t.total)}</span></div>`;
+  $("finfo").innerHTML = `${L.total}<b>${rs(t.total)}</b>`;
+}
+document.addEventListener("click", (e) => {
+  const s = e.target.closest("[data-s]"); if (s) { sel.size = s.dataset.s; paint(); return; }
+  const q = e.target.closest("[data-q]"); if (q) { sel.qty = Math.min(20, Math.max(1, sel.qty + Number(q.dataset.q))); paint(); return; }
+  const p = e.target.closest("[data-p]"); if (p) { sel.pay = p.dataset.p; paint(); return; }
+});
+$("place").addEventListener("click", async () => {
+  if (!P) return;
+  const body = { size: sel.size, qty: sel.qty, pay: sel.pay, name: $("nm").value, phone: $("ph").value, address: $("ad").value, pin: $("pn").value };
+  const err = (k) => { $("err").textContent = L["e_" + k] || L.e_try; $("err").scrollIntoView({ behavior: "smooth", block: "center" }); };
+  if (P.sizes.length && !sel.size) return err("size");
+  if (body.name.trim().length < 2) return err("name");
+  if (!/^(?:\+?91|0)?[6-9]\d{9}$/.test(body.phone.replace(/[\s-]/g, ""))) return err("phone");
+  if (body.address.trim().length < 8 || !/^[1-9]\d{5}$/.test(body.pin.trim())) return err("address");
+  if (!sel.pay) return err("pay");
+  $("place").disabled = true; $("place").textContent = L.placing; $("err").textContent = "";
+  try {
+    const r = await fetch(`${API}?o=${encodeURIComponent(TOK)}&act=place`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.error) { err(d.error === "try_again" ? "try" : d.error || "try"); return; }
+    store.set("rr_customer", { name: body.name.trim(), phone: body.phone.trim(), address: body.address.trim(), pin: body.pin.trim() });
+    history.replaceState(null, "", `order.html?k=${encodeURIComponent(d.key)}`);
+    done(d);
+  } catch { err("try"); } finally { $("place").disabled = false; $("place").textContent = L.place; }
+});
+
+/* ---------------- after placing / tracking ---------------- */
+function payBlock(d, amount) {
+  return `<div class="box center"><p>${L.upiNote(rs(amount), esc(d.shop))}</p>
+    ${d.upi ? `<a class="go" href="${esc(d.upi)}">${L.payNow}</a>` : ""}
+    ${d.qr ? `<img class="qr" src="${esc(d.qr)}" alt="UPI QR">` : ""}
+    ${d.vpa ? `<p class="muted">${L.vpa}: <b>${esc(d.vpa)}</b></p>` : ""}
+    <button class="go ghost" id="paid" style="margin-top:6px">✅ ${L.paidBtn}</button></div>`;
+}
+function wirePaid(key) {
+  const b = $("paid"); if (!b) return;
+  b.onclick = async () => {
+    b.disabled = true;
+    try { await fetch(`${API}?k=${encodeURIComponent(key)}&act=paid`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }); } catch {}
+    b.outerHTML = `<p><b>${L.paidThanks}</b></p>`;
+  };
+}
+function done(d) {
+  $("foot").hidden = true;
+  $("main").innerHTML = `<div class="box center"><div class="big">✅</div><h1>${L.thanks}</h1><p class="muted">${L.orderNo(d.id)}</p>
+      ${d.pay === "cod" ? `<p>${L.codNote(rs(d.total), esc(d.shop))}</p>` : ""}</div>
+    ${d.pay === "upi" ? payBlock(d, d.total) : ""}
+    <div class="box center"><a class="go ghost" href="order.html?k=${encodeURIComponent(d.key)}">📍 ${L.track}</a><p class="muted">${L.save}</p></div>`;
+  wirePaid(d.key);
+}
+const FLOW = ["placed", "sent_to_supplier", "accepted", "dispatched", "delivered"];
+function renderTrack(o) {
+  head(o);
+  const stopped = ["cancelled", "out_of_stock"].includes(o.status);
+  const at = FLOW.indexOf(o.status);
+  const steps = stopped ? `<div class="note">${L.st[o.status]}. ${L.stopped}</div>`
+    : `<div class="steps">${FLOW.map((s, i) => `<div class="st ${i < at ? "done" : i === at ? "now" : ""}"><i></i><span>${L.st[s]}</span></div>`).join("")}</div>`;
+  const payTxt = o.paid === "paid" ? L.p_paid : o.paid === "claimed" ? L.p_claimed : o.pay === "cod" ? L.p_unpaid_cod : L.p_unpaid_upi;
+  $("main").innerHTML = `<div class="box"><p class="muted" style="margin:0">${L.orderNo(o.id)}</p><h1>${esc(o.title)}</h1>
+      <p class="muted" style="margin:0">${[o.size, `× ${o.qty}`].filter(Boolean).map(esc).join(" · ")} · <b>${rs(o.total)}</b> · ${payTxt}</p></div>
+    <div class="box"><span class="lbl">${L.status}</span>${steps}
+      ${o.tracking ? `<p class="muted">🚚 ${L.courier}: ${/^https?:/.test(o.tracking) ? `<a href="${esc(o.tracking)}" target="_blank" rel="noopener">${esc(o.tracking)}</a>` : esc(o.tracking)}</p>` : ""}</div>
+    ${o.upi || o.qr ? payBlock(o, o.total) : ""}
+    <div class="box"><span class="lbl">${L.deliverTo}</span><div class="desc" style="margin:0">${esc(o.name)}\n${esc(o.address)}</div></div>
+    <p class="muted center">${L.save}</p>`;
+  wirePaid(KEY);
+}
+
+(async () => {
+  try {
+    if (KEY) {
+      const r = await fetch(`${API}?k=${encodeURIComponent(KEY)}`, { cache: "no-store" });
+      const d = await r.json();
+      if (!r.ok || d.error) return msg(T.en.gone);
+      return renderTrack(d);
+    }
+    if (!TOK) return msg(T.en.gone);
+    const r = await fetch(`${API}?o=${encodeURIComponent(TOK)}`, { cache: "no-store" });
+    const d = await r.json();
+    if (d.shop) head(d);
+    if (!r.ok || d.error) return msg(`${L.gone}${d.chat ? `<br><br><a class="go" href="${esc(d.chat)}">${L.chat}</a>` : ""}`);
+    if (d.soldOut) return msg(`${L.sold(esc(d.title))}<br>${L.askSeller}${d.chat ? `<br><br><a class="go" href="${esc(d.chat)}">${L.chat}</a>` : ""}`);
+    P = d; renderForm();
+  } catch { msg(T.en.e_try); }
+})();
+</script>
+</body>
+</html>
