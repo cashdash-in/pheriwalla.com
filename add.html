@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f766e">
 <meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="lib/icon-192.png">
 <title>Add products · Resell Ready</title>
 <style>
   :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --brand-soft:#e6f4f1; --bg:#f6f7f8; --warn:#b45309; --bad:#b91c1c; }
@@ -39,6 +41,11 @@
   .bar { height:6px; background:#eef0f2; border-radius:999px; overflow:hidden; margin-top:4px; } .bar i { display:block; height:100%; width:0; background:var(--brand); transition:width .2s; }
   .done { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; font-size:15px; line-height:1.5; }
   .done a { color:var(--brand); font-weight:600; }
+  .live { background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:grid; gap:8px; }
+  .live b { font-size:14px; } .live small { color:var(--muted); font-size:12.5px; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; }
+  .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:7px 12px; font:inherit; font-size:13.5px; cursor:pointer; color:var(--ink); }
+  .chip.on { background:var(--brand); border-color:var(--brand); color:#fff; font-weight:600; }
   .empty { text-align:center; color:var(--muted); padding:28px 12px; font-size:14px; }
 </style>
 </head>
@@ -50,6 +57,7 @@
     <label class="way"><span>📊</span><b id="w2">Excel / CSV</b><input id="fSheet" type="file" accept=".xlsx,.xls,.csv,.ods" hidden></label>
     <label class="way"><span>📄</span><b id="w3">Word file</b><input id="fWord" type="file" accept=".docx" hidden></label>
   </div>
+  <div class="live" id="live" hidden><b id="liveL"></b><div class="chips" id="liveC"></div><small id="liveS"></small></div>
   <div class="hint" id="hint"></div>
   <div id="list"></div>
 </main>
@@ -60,7 +68,12 @@
 <script src="lib/up.js"></script>
 <script>
 const T = {
-  en: { h: "Add products", w1: "Photos", w2: "Excel / CSV", w3: "Word file", back: "← Catalogue",
+  en: { liveL: "⏳ Keep these products live for", liveO: ["3 days", "7 days", "15 days", "30 days", "Until sold out"],
+    liveS: "After this, they move out of every reseller’s page automatically. You can re-list them from your catalogue at any time.",
+    liveDone: (d) => d ? `They will stay live for ${d} days, then move out automatically.` : "They will stay live until you mark them sold out.",
+    shared: (n) => `Thank you. ${n} photo${n === 1 ? "" : "s"} received. Please add the name and price under each one.`,
+    tip: "<br><br>📲 <b>Tip:</b> add this page to your home screen (browser menu → <i>Add to Home screen</i>). On Android you can then select photos in WhatsApp or your gallery, tap <b>Share</b> and choose <b>Resell Ready</b>.",
+    h: "Add products", w1: "Photos", w2: "Excel / CSV", w3: "Word file", back: "← Catalogue",
     hint: `Three ways to add many products at once:<br>📷 <b>Photos</b>: pick photos and videos from your phone, then type the name and price under each.<br>📊 <b>Excel</b>: one row per product with columns <b>Name, Price, Sizes, Details, Photos</b> (photo file names). <a id="tpl" href="#">Download the sample sheet</a>. After the sheet, pick the photos.<br>📄 <b>Word</b>: each picture starts a product; the text under it becomes its name, price and details.`,
     name: "Product name", price: "Price ₹", sizes: "Sizes (e.g. M L XL)", details: "Details (fabric, colour…)", prod: (n) => `Product ${n}`,
     merge: "↑ Join with above", del: "Remove", nophoto: "Add at least one photo", count: (n) => `${n} product${n === 1 ? "" : "s"} ready`,
@@ -72,7 +85,12 @@ const T = {
     more: "Add more", open: "Open catalogue", fail: "We’re sorry, the upload didn’t complete. Please check your internet connection and try again.", bad: "We’re sorry, this link is no longer valid. Please send *catalogue* to the bot to receive a new one.",
     onlySup: "Only suppliers can add products.", wordFail: "We’re sorry, we couldn’t read this Word file. Please save it as .docx and try again.", sheetFail: "We’re sorry, we couldn’t read this sheet. Please check the file and try again.",
     norows: "We couldn’t find any products in the sheet. Please make sure the first row has the column names." },
-  hi: { h: "प्रोडक्ट जोड़ें", w1: "फ़ोटो", w2: "Excel / CSV", w3: "Word फ़ाइल", back: "← कैटलॉग",
+  hi: { liveL: "⏳ ये प्रोडक्ट कितने दिन लाइव रहें", liveO: ["3 दिन", "7 दिन", "15 दिन", "30 दिन", "बिकने तक"],
+    liveS: "इसके बाद ये हर रीसेलर के पेज से अपने आप हट जाएँगे। आप कैटलॉग से इन्हें कभी भी दोबारा लाइव कर सकते हैं।",
+    liveDone: (d) => d ? `ये ${d} दिन लाइव रहेंगे, फिर अपने आप हट जाएँगे।` : "ये तब तक लाइव रहेंगे जब तक आप इन्हें बिक गया नहीं बताते।",
+    shared: (n) => `धन्यवाद। ${n} फ़ोटो मिल गईं। कृपया हर एक के नीचे नाम और कीमत लिखें।`,
+    tip: "<br><br>📲 <b>सुझाव:</b> इस पेज को होम स्क्रीन पर जोड़ें (ब्राउज़र मेनू → <i>Add to Home screen</i>)। फिर Android पर WhatsApp या गैलरी में फ़ोटो चुनें, <b>Share</b> दबाएँ और <b>Resell Ready</b> चुनें।",
+    h: "प्रोडक्ट जोड़ें", w1: "फ़ोटो", w2: "Excel / CSV", w3: "Word फ़ाइल", back: "← कैटलॉग",
     hint: `एक साथ कई प्रोडक्ट जोड़ने के तीन तरीके:<br>📷 <b>फ़ोटो</b>: फ़ोन से फ़ोटो-वीडियो चुनें, फिर हर एक के नीचे नाम और कीमत लिखें।<br>📊 <b>Excel</b>: हर प्रोडक्ट की एक लाइन, कॉलम <b>Name, Price, Sizes, Details, Photos</b> (फ़ोटो फ़ाइल के नाम)। <a id="tpl" href="#">नमूना शीट डाउनलोड करें</a>। शीट के बाद फ़ोटो चुनें।<br>📄 <b>Word</b>: हर तस्वीर से नया प्रोडक्ट शुरू होता है; उसके नीचे का टेक्स्ट नाम, कीमत और जानकारी बनता है।`,
     name: "प्रोडक्ट का नाम", price: "कीमत ₹", sizes: "साइज़ (जैसे M L XL)", details: "जानकारी (कपड़ा, रंग…)", prod: (n) => `प्रोडक्ट ${n}`,
     merge: "↑ ऊपर वाले में जोड़ें", del: "हटाएँ", nophoto: "कम से कम एक फ़ोटो जोड़ें", count: (n) => `${n} प्रोडक्ट तैयार`,
@@ -84,7 +102,12 @@ const T = {
     more: "और जोड़ें", open: "कैटलॉग खोलें", fail: "अपलोड नहीं हुआ। इंटरनेट देखें और फिर कोशिश करें।", bad: "यह लिंक काम नहीं कर रहा। बॉट को *catalogue* भेजें।",
     onlySup: "प्रोडक्ट सिर्फ़ सप्लायर जोड़ सकते हैं।", wordFail: "यह Word फ़ाइल पढ़ी नहीं गई। .docx में सेव करके फिर कोशिश करें।", sheetFail: "यह शीट पढ़ी नहीं गई।",
     norows: "शीट में प्रोडक्ट नहीं मिले। पहली लाइन में कॉलम के नाम होने चाहिए।" },
-  mr: { h: "प्रॉडक्ट जोडा", w1: "फोटो", w2: "Excel / CSV", w3: "Word फाइल", back: "← कॅटलॉग",
+  mr: { liveL: "⏳ हे प्रॉडक्ट किती दिवस लाइव्ह ठेवायचे", liveO: ["3 दिवस", "7 दिवस", "15 दिवस", "30 दिवस", "विकले जाईपर्यंत"],
+    liveS: "यानंतर ते प्रत्येक रीसेलरच्या पेजवरून आपोआप जातील. कॅटलॉगमधून तुम्ही ते कधीही पुन्हा लाइव्ह करू शकता.",
+    liveDone: (d) => d ? `ते ${d} दिवस लाइव्ह राहतील, मग आपोआप जातील.` : "तुम्ही विकले गेले असे सांगेपर्यंत ते लाइव्ह राहतील.",
+    shared: (n) => `धन्यवाद. ${n} फोटो मिळाले. कृपया प्रत्येकाखाली नाव आणि किंमत लिहा.`,
+    tip: "<br><br>📲 <b>सूचना:</b> हे पेज होम स्क्रीनवर जोडा (ब्राउझर मेनू → <i>Add to Home screen</i>). मग Android वर WhatsApp किंवा गॅलरीमध्ये फोटो निवडा, <b>Share</b> दाबा आणि <b>Resell Ready</b> निवडा.",
+    h: "प्रॉडक्ट जोडा", w1: "फोटो", w2: "Excel / CSV", w3: "Word फाइल", back: "← कॅटलॉग",
     hint: `एकाच वेळी अनेक प्रॉडक्ट जोडण्याचे तीन मार्ग:<br>📷 <b>फोटो</b>: फोनमधून फोटो-व्हिडिओ निवडा, मग प्रत्येकाखाली नाव आणि किंमत लिहा.<br>📊 <b>Excel</b>: प्रत्येक प्रॉडक्टची एक ओळ, कॉलम <b>Name, Price, Sizes, Details, Photos</b> (फोटो फाइलची नावे). <a id="tpl" href="#">नमुना शीट डाउनलोड करा</a>. शीटनंतर फोटो निवडा.<br>📄 <b>Word</b>: प्रत्येक चित्रापासून नवा प्रॉडक्ट सुरू होतो; त्याखालचा मजकूर नाव, किंमत आणि माहिती होतो.`,
     name: "प्रॉडक्टचे नाव", price: "किंमत ₹", sizes: "साइज (उदा. M L XL)", details: "माहिती (कापड, रंग…)", prod: (n) => `प्रॉडक्ट ${n}`,
     merge: "↑ वरच्यात जोडा", del: "काढा", nophoto: "किमान एक फोटो जोडा", count: (n) => `${n} प्रॉडक्ट तयार`,
@@ -103,10 +126,16 @@ const esc = RR.esc;
 const MAXV = 16 * 1024 * 1024;
 let items = [];          // { name, price, sizes, details, files: File[] }
 let moreFor = -1, pendingRows = null;
+const LIVE = [3, 7, 15, 30, 0];
+let liveDays = 7;
+function liveUI() {
+  $("liveL").textContent = L.liveL; $("liveS").textContent = L.liveS;
+  $("liveC").innerHTML = LIVE.map((d, i) => `<button class="chip${d === liveDays ? " on" : ""}" data-live="${d}">${L.liveO[i]}</button>`).join("");
+}
 
 function tr() {
   $("h").textContent = L.h; $("w1").textContent = L.w1; $("w2").textContent = L.w2; $("w3").textContent = L.w3; $("back").textContent = L.back;
-  $("hint").innerHTML = L.hint;
+  $("hint").innerHTML = L.hint + L.tip; liveUI();
   $("tpl").onclick = (e) => {
     e.preventDefault();
     const csv = "Name,Price,Sizes,Details,Photos\nRayon kurti with dupatta,599,M L XL XXL,\"Pure rayon, printed dupatta\",kurti1.jpg kurti2.jpg\nCotton saree,1200,Free size,Soft cotton with blouse piece,saree.jpg\n";
@@ -173,6 +202,27 @@ $("list").addEventListener("click", (e) => {
   render();
 });
 $("fMore").addEventListener("change", (e) => { if (moreFor >= 0) items[moreFor].files.push(...okFiles(e.target.files)); e.target.value = ""; render(); });
+$("liveC").addEventListener("click", (e) => { const b = e.target.closest("[data-live]"); if (!b) return; liveDays = Number(b.dataset.live); liveUI(); });
+
+// Photos shared from WhatsApp or the gallery (Android, once the page is on the home screen):
+// the service worker keeps them for a moment and opens this page with ?share=1.
+async function takeShared() {
+  if (!new URLSearchParams(location.search).has("share") || !("caches" in window)) return;
+  try {
+    const c = await caches.open("rr-share");
+    const keys = await c.keys();
+    const files = [];
+    for (const k of keys) {
+      const r = await c.match(k);
+      const b = await r.blob();
+      files.push(new File([b], decodeURIComponent(r.headers.get("x-name") || "photo"), { type: b.type }));
+      await c.delete(k);
+    }
+    const ok = okFiles(files);
+    for (const f of ok) items.push(blank([f]));
+    if (ok.length) { render(); setTimeout(() => alert(L.shared(ok.length)), 300); }
+  } catch (e) { console.error(e); }
+}
 $("fPhotos").addEventListener("change", (e) => { for (const f of okFiles(e.target.files)) items.push(blank([f])); e.target.value = ""; render(); });
 
 // Excel / CSV
@@ -268,12 +318,12 @@ $("go").addEventListener("click", async () => {
     $("cnt").textContent = L.saving;
     let added = 0; const held = [], refused = [];
     for (let i = 0; i < products.length; i += 25) {
-      const r = await RR.call("products", { products: products.slice(i, i + 25) });
+      const r = await RR.call("products", { products: products.slice(i, i + 25), live_days: liveDays });
       added += r.added || 0; held.push(...(r.held || [])); refused.push(...(r.refused || []));
     }
     $("barI").style.width = "100%";
     items = [];
-    $("list").innerHTML = `<div class="done">${L.done(added)}${held.length ? `<br>${esc(L.held(held.join(", ")))}` : ""}${refused.length ? `<br>${esc(L.refused(refused.join(", ")))}` : ""}
+    $("list").innerHTML = `<div class="done">${L.done(added)} ${esc(L.liveDone(liveDays))}${held.length ? `<br>${esc(L.held(held.join(", ")))}` : ""}${refused.length ? `<br>${esc(L.refused(refused.join(", ")))}` : ""}
       <br><br><a href="./?c=${encodeURIComponent(RR.tok)}">${L.open} →</a> · <a href="#" id="again">${L.more}</a></div>`;
     $("again").onclick = (e) => { e.preventDefault(); render(); };
     $("cnt").textContent = ""; $("go").textContent = L.upload(0);
@@ -284,6 +334,7 @@ $("go").addEventListener("click", async () => {
 
 (async () => {
   $("back").href = `./?c=${encodeURIComponent(RR.tok)}`;
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   try {
     const d = await RR.info();
     L = { ...T.en, ...(T[d.lang] || {}) };
@@ -291,7 +342,11 @@ $("go").addEventListener("click", async () => {
     $("shop").textContent = d.shop || "";
     tr();
     if (d.role !== "supplier") { $("list").innerHTML = `<div class="empty">${L.onlySup}</div>`; document.querySelector(".ways").hidden = true; return; }
+    try { localStorage.setItem("rr_sup_tok", RR.tok); } catch {}
+    if (LIVE.includes(d.live_days)) liveDays = d.live_days;
+    $("live").hidden = false; liveUI();
     render();
+    await takeShared();
   } catch (e) { tr(); $("list").innerHTML = `<div class="empty">${L.bad}</div>`; document.querySelector(".ways").hidden = true; }
 })();
 </script>

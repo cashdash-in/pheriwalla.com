@@ -14,6 +14,17 @@
   .dashbtn { float:right; color:#fff; text-decoration:none; font-size:13px; font-weight:600; border:1px solid rgba(255,255,255,.6); border-radius:999px; padding:5px 10px; margin-left:8px; }
   .tools2 { display:flex; gap:8px; padding:10px 12px 0; overflow-x:auto; }
   .tools2 a, .tools2 button { flex:none; display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--brand); color:var(--brand); border-radius:10px; padding:9px 12px; font-size:14px; font-weight:600; text-decoration:none; font-family:inherit; cursor:pointer; }
+  .live { margin-top:6px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12.5px; color:var(--muted); }
+  .live button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:5px 8px; font:inherit; font-size:12.5px; color:var(--ink); cursor:pointer; }
+  #endedBox { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; display:flex; align-items:flex-end; justify-content:center; }
+  #endedBox[hidden] { display:none; }
+  #endedBox .sheet { background:#fff; width:100%; max-width:640px; max-height:85vh; overflow:auto; border-radius:16px 16px 0 0; padding:14px 14px calc(14px + env(safe-area-inset-bottom)); }
+  #endedBox h3 { margin:0 0 10px; font-size:17px; display:flex; justify-content:space-between; align-items:center; }
+  #endedBox h3 button { border:0; background:none; font:inherit; font-size:14px; color:var(--brand); cursor:pointer; }
+  .erow { display:flex; gap:10px; align-items:center; padding:8px 0; border-top:1px solid var(--line); }
+  .erow img { width:56px; height:68px; object-fit:cover; border-radius:8px; background:#eef0f2; flex:none; }
+  .erow div { flex:1; min-width:0; font-size:13.5px; } .erow small { display:block; color:var(--muted); }
+  .erow button { flex:none; border:1px solid var(--brand); color:var(--brand); background:#fff; border-radius:9px; padding:8px 10px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
   .tools2 img { width:22px; height:22px; border-radius:5px; object-fit:contain; background:#fff; }
   header h1 { margin:0; font-size:19px; font-weight:700; }
   header p { margin:2px 0 0; font-size:13px; opacity:.85; }
@@ -75,6 +86,7 @@
 <div class="bar" id="days"></div>
 <div class="tools"><input id="q" type="search" autocomplete="off"><select id="sup" hidden></select><select id="sort"></select></div>
 <div class="tools2" id="tools2" hidden></div>
+<div id="endedBox" hidden><div class="sheet"><h3><span id="endedT"></span><button id="endedX"></button></h3><div id="endedL"></div></div></div>
 <input id="fLogo" type="file" accept="image/*" hidden>
 <div class="hint" id="hint"></div>
 <main class="grid" id="grid"></main>
@@ -96,6 +108,11 @@ const T = {
     vopen: "Open in phone’s video player ↗", vfail: "We’re sorry, this browser couldn’t play the video. Please tap the button below to open it in your phone’s video player.",
     code: "Code", codeAsk: "Your joining code (2–6 letters or numbers). Resellers join with JOIN + this code, and your product numbers start with it. Links you shared with the old code will stop working.", codeSet: (c) => `Code changed to ${c}. Share your new joining link.`, codeBad: "We’re sorry, that code is already in use or not allowed. Please try another one (2–6 letters or numbers).",
     rename: "Name", renameAsk: "Please enter your business name, exactly as you would like customers and resellers to see it:", renamed: "Thank you. Your name has been saved.", renameBad: "We’re sorry, that name can’t be used. Please use 2–40 letters.",
+    liveTill: (d) => `⏳ Live till ${d}`, liveAlways: "⏳ Live until sold out", extend: "⏳ Extend", sold: "Sold out",
+    soldAsk: "Mark this product as sold out? It will leave every reseller’s page now.", soldOk: "Thank you. The product has been marked as sold out.",
+    extAsk: "How many more days should it stay live? Please enter 3, 7, 15 or 30, or 0 to keep it live until it is sold out.", extOk: (d) => `Thank you. It is now live ${d}.`,
+    ended: "⏳ Ended", endedT: "Ended products", endedNone: "There are no ended products. 👍", relist: "Re-list for 7 days", relistOk: "Thank you. The product is live again for 7 days.",
+    endedOn: (d) => `Ended ${d}`, close: "Close", tryAgain: "We’re sorry, that didn’t work. Please try again.", till: (d) => `till ${d}`, always: "until sold out",
     addp: "＋ Add products", inv: "👥 Invite resellers", logo: "Logo", logoSet: "Thank you. Your logo has been saved and will appear on new photos.", logoFail: "We’re sorry, the logo couldn’t be saved. Please try again.",
     all: "All suppliers", hint: "Welcome! Please select the products you would like, then tap <b>Send on WhatsApp</b>. Each photo carries your price and your number. To post on your Status, tap <b>Share</b> on a product and choose <b>My status</b>.",
     share: "Send on WhatsApp", one: "Share", clear: "Clear", web: "Website", sel: (n) => `${n} ticked`, empty: "There are no products in this period yet. Please try 7 days or 30 days.",
@@ -108,6 +125,11 @@ const T = {
     vopen: "फ़ोन के वीडियो प्लेयर में खोलें ↗", vfail: "यह ब्राउज़र वीडियो नहीं चला पाया। नीचे के बटन से फ़ोन के प्लेयर में खोलें।",
     code: "कोड", codeAsk: "आपका जुड़ने का कोड (2–6 अक्षर या अंक)। रीसेलर JOIN + यह कोड भेजकर जुड़ते हैं, और प्रोडक्ट नंबर इसी से शुरू होते हैं। पुराने कोड वाले लिंक काम करना बंद कर देंगे।", codeSet: (c) => `कोड ${c} हो गया। अपना नया जुड़ने का लिंक शेयर करें।`, codeBad: "यह कोड पहले से लिया है या नहीं चल सकता। दूसरा आज़माएँ (2–6 अक्षर)।",
     rename: "नाम", renameAsk: "आपके बिज़नेस का नाम, जैसा ग्राहक और रीसेलर देखें:", renamed: "नाम सेव हो गया।", renameBad: "यह नाम नहीं चल सकता। 2–40 अक्षर रखें।",
+    liveTill: (d) => `⏳ ${d} तक लाइव`, liveAlways: "⏳ बिकने तक लाइव", extend: "⏳ बढ़ाएँ", sold: "बिक गया",
+    soldAsk: "क्या यह प्रोडक्ट बिक गया है? यह अभी हर रीसेलर के पेज से हट जाएगा।", soldOk: "धन्यवाद। प्रोडक्ट बिक गया दर्ज हो गया।",
+    extAsk: "यह और कितने दिन लाइव रहे? कृपया 3, 7, 15 या 30 लिखें, या बिकने तक लाइव रखने के लिए 0 लिखें।", extOk: (d) => `धन्यवाद। अब यह ${d} लाइव है।`,
+    ended: "⏳ समाप्त", endedT: "समाप्त प्रोडक्ट", endedNone: "कोई समाप्त प्रोडक्ट नहीं है। 👍", relist: "7 दिन के लिए फिर लाइव करें", relistOk: "धन्यवाद। प्रोडक्ट 7 दिन के लिए फिर लाइव है।",
+    endedOn: (d) => `${d} को समाप्त`, close: "बंद करें", tryAgain: "क्षमा करें, यह नहीं हुआ। कृपया फिर कोशिश करें।", till: (d) => `${d} तक`, always: "बिकने तक",
     addp: "＋ प्रोडक्ट जोड़ें", inv: "👥 रीसेलर बुलाएँ", logo: "लोगो", logoSet: "लोगो सेव हो गया। नई फ़ोटो पर दिखेगा।", logoFail: "लोगो सेव नहीं हुआ। फिर कोशिश करें।",
     all: "सभी सप्लायर", hint: "जो प्रोडक्ट चाहिए उन पर टिक करें, फिर <b>WhatsApp पर भेजें</b> दबाएँ। हर फ़ोटो पर आपकी कीमत और आपका नंबर है। Status के लिए एक प्रोडक्ट पर <b>शेयर</b> दबाकर <b>My status</b> चुनें।",
     share: "WhatsApp पर भेजें", one: "शेयर", clear: "हटाएँ", web: "वेबसाइट", sel: (n) => `${n} चुने`, empty: "इस समय में कोई प्रोडक्ट नहीं। 7 दिन या 30 दिन देखें।",
@@ -120,6 +142,11 @@ const T = {
     vopen: "फोनच्या व्हिडिओ प्लेयरमध्ये उघडा ↗", vfail: "हा ब्राउझर व्हिडिओ चालवू शकला नाही. खालच्या बटणाने फोनच्या प्लेयरमध्ये उघडा.",
     code: "कोड", codeAsk: "तुमचा जोडण्याचा कोड (2–6 अक्षरे किंवा अंक). रीसेलर JOIN + हा कोड पाठवून जोडतात, आणि प्रॉडक्ट नंबर यानेच सुरू होतात. जुन्या कोडच्या लिंक चालणं बंद होईल.", codeSet: (c) => `कोड ${c} झाला. तुमची नवी जोडण्याची लिंक शेअर करा.`, codeBad: "हा कोड आधीच घेतला आहे किंवा चालणार नाही. दुसरा वापरा (2–6 अक्षरे).",
     rename: "नाव", renameAsk: "तुमच्या व्यवसायाचं नाव, जसं ग्राहक आणि रीसेलरना दिसावं:", renamed: "नाव सेव्ह झालं.", renameBad: "हे नाव चालणार नाही. 2–40 अक्षरे ठेवा.",
+    liveTill: (d) => `⏳ ${d} पर्यंत लाइव्ह`, liveAlways: "⏳ विकले जाईपर्यंत लाइव्ह", extend: "⏳ वाढवा", sold: "विकले गेले",
+    soldAsk: "हा प्रॉडक्ट विकला गेला आहे का? तो आत्ता प्रत्येक रीसेलरच्या पेजवरून जाईल.", soldOk: "धन्यवाद. प्रॉडक्ट विकला गेला अशी नोंद झाली.",
+    extAsk: "तो आणखी किती दिवस लाइव्ह ठेवायचा? कृपया 3, 7, 15 किंवा 30 लिहा, किंवा विकले जाईपर्यंत ठेवण्यासाठी 0 लिहा.", extOk: (d) => `धन्यवाद. आता तो ${d} लाइव्ह आहे.`,
+    ended: "⏳ संपलेले", endedT: "संपलेले प्रॉडक्ट", endedNone: "संपलेले प्रॉडक्ट नाहीत. 👍", relist: "7 दिवसांसाठी पुन्हा लाइव्ह करा", relistOk: "धन्यवाद. प्रॉडक्ट 7 दिवसांसाठी पुन्हा लाइव्ह आहे.",
+    endedOn: (d) => `${d} ला संपले`, close: "बंद करा", tryAgain: "क्षमस्व, हे झाले नाही. कृपया पुन्हा प्रयत्न करा.", till: (d) => `${d} पर्यंत`, always: "विकले जाईपर्यंत",
     addp: "＋ प्रॉडक्ट जोडा", inv: "👥 रीसेलर बोलवा", logo: "लोगो", logoSet: "लोगो सेव्ह झाला. नव्या फोटोंवर दिसेल.", logoFail: "लोगो सेव्ह झाला नाही. पुन्हा प्रयत्न करा.",
     all: "सगळे सप्लायर", hint: "हवे ते प्रॉडक्ट टिक करा, मग <b>WhatsApp वर पाठवा</b> दाबा. प्रत्येक फोटोवर तुमची किंमत आणि तुमचा नंबर आहे. Status साठी एका प्रॉडक्टवर <b>शेअर</b> दाबून <b>My status</b> निवडा.",
     share: "WhatsApp वर पाठवा", one: "शेअर", clear: "काढा", web: "वेबसाइट", sel: (n) => `${n} निवडले`, empty: "या वेळेत प्रॉडक्ट नाहीत. 7 दिवस किंवा 30 दिवस पाहा.",
@@ -181,12 +208,52 @@ function visible() {
   return $("sort").value === "pop" ? [...list].sort((a, b) => (b.orders || 0) - (a.orders || 0)) : list;
 }
 
+const fmtDay = (iso) => new Date(iso).toLocaleDateString((data?.lang || "en") + "-IN", { day: "numeric", month: "short" });
+
+// Supplier: extend a product, mark it sold out, or re-list ended ones.
+$("grid").addEventListener("click", async (e) => {
+  const ext = e.target.closest("[data-ext]"), sold = e.target.closest("[data-sold]");
+  if (!ext && !sold) return;
+  e.stopPropagation();
+  try {
+    if (sold) {
+      if (!confirm(L.soldAsk)) return;
+      await RR.call("sold", { key: Number(sold.dataset.sold) }); toast(L.soldOk, 3500); load(); return;
+    }
+    const v = prompt(L.extAsk, "7");
+    if (v === null) return;
+    const d = Number(String(v).trim());
+    if (![0, 3, 7, 15, 30].includes(d)) { alert(L.extAsk); return; }
+    const r = await RR.call("relist", { key: Number(ext.dataset.ext), days: d });
+    toast(L.extOk(r.live_until === "infinity" ? L.always : L.till(fmtDay(r.live_until))), 3500); load();
+  } catch { toast(L.tryAgain, 3500); }
+}, true);
+async function showEnded() {
+  $("endedT").textContent = L.endedT; $("endedX").textContent = L.close;
+  $("endedL").innerHTML = "…"; $("endedBox").hidden = false;
+  try {
+    const r = await RR.call("expired", {});
+    $("endedL").innerHTML = r.products?.length ? r.products.map((p) => `<div class="erow"><img src="${esc(p.img || "")}" alt="" loading="lazy">
+      <div><b>${esc(p.title)}</b><small>${esc([p.code, p.price ? rupees(p.price) : "", p.ended && p.ended !== "infinity" ? L.endedOn(fmtDay(p.ended)) : ""].filter(Boolean).join(" · "))}</small></div>
+      <button data-relist="${p.key}">${L.relist}</button></div>`).join("") : `<div class="empty">${L.endedNone}</div>`;
+  } catch { $("endedL").innerHTML = `<div class="empty">${L.tryAgain}</div>`; }
+}
+$("endedX").addEventListener("click", () => { $("endedBox").hidden = true; });
+$("endedBox").addEventListener("click", async (e) => {
+  if (e.target.id === "endedBox") { $("endedBox").hidden = true; return; }
+  const b = e.target.closest("[data-relist]"); if (!b) return;
+  b.disabled = true;
+  try { await RR.call("relist", { key: Number(b.dataset.relist), days: 7 }); b.closest(".erow").remove(); toast(L.relistOk, 3000); load(); }
+  catch { b.disabled = false; toast(L.tryAgain, 3500); }
+});
+
 function render() {
   const list = visible();
   const rt = data?.rating;
   const t2 = [];
   if (data?.role === "supplier") t2.push(`<a href="add.html?c=${encodeURIComponent(tok)}">${L.addp}</a>`, `<a href="invite.html?c=${encodeURIComponent(tok)}">${L.inv}</a>`);
   if (data) t2.push(`<button id="nameBtn">✏️ ${L.rename}</button>`);
+  if (data?.role === "supplier") t2.push(`<button id="endedBtn">${L.ended}</button>`);
   if (data?.role === "supplier") t2.push(`<button id="codeBtn">🔤 ${L.code}${data.code ? `: ${esc(data.code)}` : ""}</button>`);
   if (data) t2.push(`<button id="logoBtn">${data.logo ? `<img src="${esc(data.logo)}" alt="">` : "🖼"} ${L.logo}</button>`);
   $("tools2").innerHTML = t2.join(""); $("tools2").hidden = !t2.length;
@@ -206,6 +273,7 @@ function render() {
       <div class="meta"><b>${esc(p.title)}</b><small>${esc([p.code, p.sizes.slice(0, 4).join(" "), p.supplier].filter(Boolean).join(" · "))}</small>
         ${p.stars ? `<div class="stars">${"★".repeat(Math.round(p.stars))}${"☆".repeat(5 - Math.round(p.stars))} ${Number(p.stars).toFixed(1)} <span>· ${L.ordered(p.orders)}</span></div>` : ""}
         ${p.desc && p.desc !== p.title ? `<div class="desc" data-desc>${esc(p.desc)}</div>` : ""}
+        ${data.role === "supplier" ? `<div class="live"><span>${p.live_until === "infinity" || !p.live_until ? L.liveAlways : L.liveTill(fmtDay(p.live_until))}</span><button data-ext="${p.key}">${L.extend}</button><button data-sold="${p.key}">${L.sold}</button></div>` : ""}
         <div class="btns"><button class="one" data-one="${p.key}">${L.one}</button>${p.videos && p.photos ? `<button class="one" data-vid="${p.key}">${L.vbtn}</button>` : ""}</div></div>
     </div>`).join("");
   foot();
@@ -330,6 +398,7 @@ $("sup").addEventListener("change", render);
 $("sort").addEventListener("change", render);
 $("tools2").addEventListener("click", async (e) => {
   if (e.target.closest("#logoBtn")) { $("fLogo").click(); return; }
+  if (e.target.closest("#endedBtn")) { showEnded(); return; }
   if (e.target.closest("#codeBtn")) {
     const c = prompt(L.codeAsk, data?.code || "");
     if (c === null || !c.trim() || c.trim().toUpperCase() === data?.code) return;
