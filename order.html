@@ -49,6 +49,8 @@
   .qr { width:220px; max-width:70%; border-radius:12px; border:1px solid var(--line); display:block; margin:8px auto; }
   .empty { text-align:center; color:var(--muted); padding:60px 20px; font-size:15px; line-height:1.5; }
   .muted { color:var(--muted); font-size:13.5px; }
+  .ends { display:inline-block; margin-top:6px; background:#111827; color:#fff; font-size:12.5px; font-weight:600; padding:4px 9px; border-radius:999px; }
+  .ends.soon { background:#b91c1c; }
 </style>
 </head>
 <body>
@@ -61,7 +63,7 @@ const API = "https://obgedilcyvaaewpvvdzi.supabase.co/functions/v1/shop";
 const qs = new URLSearchParams(location.search);
 const TOK = qs.get("t"), KEY = qs.get("k");
 const T = {
-  en: { sub: "Secure order page", chat: "💬 Chat", size: "Select size", qty: "Quantity", details: "Delivery details", name: "Full name", phone: "WhatsApp / mobile number (10 digits)",
+  en: { ends: (t) => `⏳ Offer ends in ${t}`, endsNow: "⏳ Offer ending now", dh: (d, h) => `${d}d ${h}h`, hm: (h, m) => `${h}h ${m}m`, mm: (m) => `${m}m`, sub: "Secure order page", chat: "💬 Chat", size: "Select size", qty: "Quantity", details: "Delivery details", name: "Full name", phone: "WhatsApp / mobile number (10 digits)",
     addr: "House / flat, street, area, city", pin: "PIN code", pay: "Payment", cod: "Cash on delivery", upi: "Pay by UPI", price: "Price", delivery: "Delivery", free: "Free", total: "Total",
     tbc: "Price to be confirmed by the seller", place: "Place order", placing: "Placing your order…", terms: (u) => `By placing this order, you agree to our <a href="${u}" target="_blank" rel="noopener">terms</a>.`,
     e_size: "Please select a size.", e_name: "Please enter your name.", e_phone: "Please enter a valid 10-digit mobile number.", e_address: "Please enter your full address and a 6-digit PIN code.",
@@ -74,7 +76,7 @@ const T = {
     st: { placed: "Order placed", sent_to_supplier: "Being confirmed", accepted: "Packed", dispatched: "Out for delivery", delivered: "Delivered", cancelled: "Cancelled", out_of_stock: "Out of stock" },
     p_unpaid_cod: "Pay on delivery", p_unpaid_upi: "Payment pending", p_claimed: "Payment being verified", p_paid: "Paid ✅", courier: "Courier tracking",
     stopped: "This order was cancelled. If you have already paid, the seller will contact you about a refund.", again: "Order again", deliverTo: "Delivering to" },
-  hi: { sub: "सुरक्षित ऑर्डर पेज", chat: "💬 चैट", size: "साइज़ चुनें", qty: "संख्या", details: "डिलीवरी की जानकारी", name: "पूरा नाम", phone: "WhatsApp / मोबाइल नंबर (10 अंक)",
+  hi: { ends: (t) => `⏳ ऑफ़र ${t} में खत्म`, endsNow: "⏳ ऑफ़र अभी खत्म हो रहा है", dh: (d, h) => `${d}दि ${h}घं`, hm: (h, m) => `${h}घं ${m}मि`, mm: (m) => `${m}मि`, sub: "सुरक्षित ऑर्डर पेज", chat: "💬 चैट", size: "साइज़ चुनें", qty: "संख्या", details: "डिलीवरी की जानकारी", name: "पूरा नाम", phone: "WhatsApp / मोबाइल नंबर (10 अंक)",
     addr: "मकान / फ़्लैट, गली, इलाका, शहर", pin: "पिन कोड", pay: "भुगतान", cod: "डिलीवरी पर नकद", upi: "UPI से भुगतान", price: "कीमत", delivery: "डिलीवरी", free: "मुफ़्त", total: "कुल",
     tbc: "कीमत विक्रेता बताएंगे", place: "ऑर्डर करें", placing: "आपका ऑर्डर हो रहा है…", terms: (u) => `ऑर्डर करके आप हमारी <a href="${u}" target="_blank" rel="noopener">शर्तों</a> से सहमत होते हैं।`,
     e_size: "कृपया साइज़ चुनें।", e_name: "कृपया अपना नाम लिखें।", e_phone: "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।", e_address: "कृपया पूरा पता और 6 अंकों का पिन कोड लिखें।",
@@ -87,7 +89,7 @@ const T = {
     st: { placed: "ऑर्डर हुआ", sent_to_supplier: "कन्फ़र्म हो रहा है", accepted: "पैक हो गया", dispatched: "डिलीवरी के लिए निकला", delivered: "डिलीवर हो गया", cancelled: "रद्द", out_of_stock: "स्टॉक ख़त्म" },
     p_unpaid_cod: "डिलीवरी पर भुगतान", p_unpaid_upi: "भुगतान बाकी", p_claimed: "भुगतान की जाँच हो रही है", p_paid: "भुगतान हो गया ✅", courier: "कूरियर ट्रैकिंग",
     stopped: "यह ऑर्डर रद्द हो गया। अगर आपने भुगतान कर दिया है, तो विक्रेता रिफ़ंड के लिए संपर्क करेंगे।", again: "फिर से ऑर्डर करें", deliverTo: "डिलीवरी का पता" },
-  mr: { sub: "सुरक्षित ऑर्डर पेज", chat: "💬 चॅट", size: "साइज निवडा", qty: "संख्या", details: "डिलिव्हरीची माहिती", name: "पूर्ण नाव", phone: "WhatsApp / मोबाइल नंबर (10 अंक)",
+  mr: { ends: (t) => `⏳ ऑफर ${t} मध्ये संपेल`, endsNow: "⏳ ऑफर आत्ता संपत आहे", dh: (d, h) => `${d}दि ${h}ता`, hm: (h, m) => `${h}ता ${m}मि`, mm: (m) => `${m}मि`, sub: "सुरक्षित ऑर्डर पेज", chat: "💬 चॅट", size: "साइज निवडा", qty: "संख्या", details: "डिलिव्हरीची माहिती", name: "पूर्ण नाव", phone: "WhatsApp / मोबाइल नंबर (10 अंक)",
     addr: "घर / फ्लॅट, गल्ली, भाग, शहर", pin: "पिन कोड", pay: "पेमेंट", cod: "डिलिव्हरीवर रोख", upi: "UPI ने पेमेंट", price: "किंमत", delivery: "डिलिव्हरी", free: "मोफत", total: "एकूण",
     tbc: "किंमत विक्रेता सांगतील", place: "ऑर्डर करा", placing: "तुमची ऑर्डर होत आहे…", terms: (u) => `ऑर्डर करून तुम्ही आमच्या <a href="${u}" target="_blank" rel="noopener">अटी</a> मान्य करता.`,
     e_size: "कृपया साइज निवडा.", e_name: "कृपया तुमचं नाव लिहा.", e_phone: "कृपया योग्य 10 अंकी मोबाइल नंबर लिहा.", e_address: "कृपया पूर्ण पत्ता आणि 6 अंकी पिन कोड लिहा.",
@@ -128,7 +130,7 @@ function renderForm() {
   if (P.sizes.length === 1) sel.size = P.sizes[0];
   $("main").innerHTML = `
     ${g ? `<div class="gal ${P.media.length > 1 ? "many" : ""}">${g}</div>` : ""}
-    <div class="box"><h1>${esc(P.title)}</h1><div class="price">${P.price ? rs(P.price) : `<span class="muted">${L.tbc}</span>`}</div>
+    <div class="box"><h1>${esc(P.title)}</h1><div class="price">${P.price ? rs(P.price) : `<span class="muted">${L.tbc}</span>`}</div>${P.ends ? `<div class="ends" id="ends"></div>` : ""}
       ${P.desc ? `<div class="desc">${esc(P.desc)}</div>` : ""}<p class="muted" style="margin:8px 0 0">${esc(P.code)}</p></div>
     ${P.sizes.length ? `<div class="box"><span class="lbl">${L.size}</span><div class="chips" id="sizes">${P.sizes.map((s) => `<button class="chip ${sel.size === s ? "on" : ""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div></div>` : ""}
     <div class="box"><span class="lbl">${L.qty}</span><div class="qty"><button data-q="-1">−</button><span id="qn">1</span><button data-q="1">+</button></div></div>
@@ -237,9 +239,18 @@ function renderTrack(o) {
     if (d.shop) head(d);
     if (!r.ok || d.error) return msg(`${L.gone}${d.chat ? `<br><br><a class="go" href="${esc(d.chat)}">${L.chat}</a>` : ""}`);
     if (d.soldOut) return msg(`${L.sold(esc(d.title))}<br>${L.askSeller}${d.chat ? `<br><br><a class="go" href="${esc(d.chat)}">${L.chat}</a>` : ""}`);
-    P = d; renderForm();
+    P = d; renderForm(); endsTick(); setInterval(endsTick, 30000);
   } catch { msg(T.en.e_try); }
 })();
+// Countdown: how long the product stays on sale.
+function endsTick() {
+  const el = document.getElementById("ends"); if (!el || !P?.ends) return;
+  const ms = new Date(P.ends).getTime() - Date.now();
+  if (ms <= 0) { el.textContent = L.endsNow; return; }
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  el.textContent = L.ends(d ? L.dh(d, h % 24) : h ? L.hm(h, m % 60) : L.mm(Math.max(1, m)));
+  el.classList.toggle("soon", ms < 24 * 3600000);
+}
 </script>
 </body>
 </html>

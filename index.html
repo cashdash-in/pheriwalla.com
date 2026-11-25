@@ -18,11 +18,19 @@
   .tools2 a, .tools2 button { flex:none; display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--brand); color:var(--brand); border-radius:10px; padding:9px 12px; font-size:14px; font-weight:600; text-decoration:none; font-family:inherit; cursor:pointer; }
   .live { margin-top:6px; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12.5px; color:var(--muted); }
   .live button { border:1px solid var(--line); background:#fff; border-radius:8px; padding:5px 8px; font:inherit; font-size:12.5px; color:var(--ink); cursor:pointer; }
-  #endedBox { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; display:flex; align-items:flex-end; justify-content:center; }
-  #endedBox[hidden] { display:none; }
-  #endedBox .sheet { background:#fff; width:100%; max-width:640px; max-height:85vh; overflow:auto; border-radius:16px 16px 0 0; padding:14px 14px calc(14px + env(safe-area-inset-bottom)); }
-  #endedBox h3 { margin:0 0 10px; font-size:17px; display:flex; justify-content:space-between; align-items:center; }
-  #endedBox h3 button { border:0; background:none; font:inherit; font-size:14px; color:var(--brand); cursor:pointer; }
+  .timer { position:absolute; left:6px; top:6px; background:rgba(17,24,39,.78); color:#fff; font-size:11.5px; font-weight:600; padding:3px 7px; border-radius:999px; }
+  .timer.soon { background:#b91c1c; }
+  .badge { background:#dc2626; color:#fff; border-radius:999px; font-size:11px; padding:1px 6px; margin-left:4px; }
+  .ochips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+  .orow { border-top:1px solid var(--line); padding:10px 0; font-size:13.5px; display:grid; gap:3px; }
+  .orow .top { display:flex; justify-content:space-between; gap:8px; } .orow .st { font-weight:600; white-space:nowrap; }
+  .orow small { color:var(--muted); } .orow a { color:var(--brand); font-weight:600; text-decoration:none; margin-right:10px; }
+  .ohint { font-size:12.5px; color:var(--muted); margin:0 0 8px; }
+  #ordersBox, #endedBox { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; display:flex; align-items:flex-end; justify-content:center; }
+  #endedBox[hidden], #ordersBox[hidden] { display:none; }
+  #ordersBox .sheet, #endedBox .sheet { background:#fff; width:100%; max-width:640px; max-height:85vh; overflow:auto; border-radius:16px 16px 0 0; padding:14px 14px calc(14px + env(safe-area-inset-bottom)); }
+  #ordersBox h3, #endedBox h3 { margin:0 0 10px; font-size:17px; display:flex; justify-content:space-between; align-items:center; }
+  #ordersBox h3 button, #endedBox h3 button { border:0; background:none; font:inherit; font-size:14px; color:var(--brand); cursor:pointer; }
   .erow { display:flex; gap:10px; align-items:center; padding:8px 0; border-top:1px solid var(--line); }
   .erow img { width:56px; height:68px; object-fit:cover; border-radius:8px; background:#eef0f2; flex:none; }
   .erow div { flex:1; min-width:0; font-size:13.5px; } .erow small { display:block; color:var(--muted); }
@@ -88,6 +96,7 @@
 <div class="bar" id="days"></div>
 <div class="tools"><input id="q" type="search" autocomplete="off"><select id="sup" hidden></select><select id="sort"></select></div>
 <div class="tools2" id="tools2" hidden></div>
+<div id="ordersBox" hidden><div class="sheet"><h3><span id="ordersT"></span><button id="ordersX"></button></h3><p class="ohint" id="ohint"></p><div class="ochips" id="ochips"></div><div id="ordersL"></div></div></div>
 <div id="endedBox" hidden><div class="sheet"><h3><span id="endedT"></span><button id="endedX"></button></h3><div id="endedL"></div></div></div>
 <input id="fLogo" type="file" accept="image/*" hidden>
 <div class="hint" id="hint"></div>
@@ -110,6 +119,13 @@ const T = {
     vopen: "Open in phone’s video player ↗", vfail: "We’re sorry, this browser couldn’t play the video. Please tap the button below to open it in your phone’s video player.",
     code: "Code", codeAsk: "Your joining code (2–6 letters or numbers). Resellers join with JOIN + this code, and your product numbers start with it. Links you shared with the old code will stop working.", codeSet: (c) => `Code changed to ${c}. Share your new joining link.`, codeBad: "We’re sorry, that code is already in use or not allowed. Please try another one (2–6 letters or numbers).",
     rename: "Name", renameAsk: "Please enter your business name, exactly as you would like customers and resellers to see it:", renamed: "Thank you. Your name has been saved.", renameBad: "We’re sorry, that name can’t be used. Please use 2–40 letters.",
+    left: (t) => `⏳ ${t} left`, dh: (d, h) => `${d}d ${h}h`, hm: (h, m) => `${h}h ${m}m`, mm: (m) => `${m}m`, endingNow: "⏳ Ending now",
+    orders: "📦 Orders", ordersT: "Your orders", ordersNone: "There are no orders yet. They will appear here as soon as a customer orders. 🙏",
+    oAll: "All", oNew: "New", oOpen: "In progress", oDone: "Delivered", oOff: "Cancelled", oHint: "You will still receive every new order on WhatsApp, with the buttons to act on it.",
+    st: { placed: "🆕 New", sent_to_supplier: "📤 With supplier", accepted: "📦 Packed", dispatched: "🚚 Dispatched", delivered: "✅ Delivered", cancelled: "❌ Cancelled", out_of_stock: "❌ Out of stock" },
+    stSup: { sent_to_supplier: "🆕 New", accepted: "📦 Packed", dispatched: "🚚 Dispatched", delivered: "✅ Delivered", cancelled: "❌ Cancelled", out_of_stock: "❌ Out of stock" },
+    paidL: { paid: "Paid", claimed: "Payment to confirm", unpaid: "Not paid yet" }, cod: "Cash on delivery", upiL: "UPI", newOrder: "📦 You have a new order. Thank you!",
+    margin: (m) => `your earning ${m}`, track: "Track", fromWeb: "web order", call: "Call",
     liveTill: (d) => `⏳ Live till ${d}`, liveAlways: "⏳ Live until sold out", extend: "⏳ Extend", sold: "Sold out",
     soldAsk: "Mark this product as sold out? It will leave every reseller’s page now.", soldOk: "Thank you. The product has been marked as sold out.",
     extAsk: "How many more days should it stay live? Please enter any number of days from 1 to 90, or 0 to keep it live until it is sold out.", extOk: (d) => `Thank you. It is now live ${d}.`,
@@ -127,6 +143,13 @@ const T = {
     vopen: "फ़ोन के वीडियो प्लेयर में खोलें ↗", vfail: "यह ब्राउज़र वीडियो नहीं चला पाया। नीचे के बटन से फ़ोन के प्लेयर में खोलें।",
     code: "कोड", codeAsk: "आपका जुड़ने का कोड (2–6 अक्षर या अंक)। रीसेलर JOIN + यह कोड भेजकर जुड़ते हैं, और प्रोडक्ट नंबर इसी से शुरू होते हैं। पुराने कोड वाले लिंक काम करना बंद कर देंगे।", codeSet: (c) => `कोड ${c} हो गया। अपना नया जुड़ने का लिंक शेयर करें।`, codeBad: "यह कोड पहले से लिया है या नहीं चल सकता। दूसरा आज़माएँ (2–6 अक्षर)।",
     rename: "नाम", renameAsk: "आपके बिज़नेस का नाम, जैसा ग्राहक और रीसेलर देखें:", renamed: "नाम सेव हो गया।", renameBad: "यह नाम नहीं चल सकता। 2–40 अक्षर रखें।",
+    left: (t) => `⏳ ${t} बाकी`, dh: (d, h) => `${d}दि ${h}घं`, hm: (h, m) => `${h}घं ${m}मि`, mm: (m) => `${m}मि`, endingNow: "⏳ अभी खत्म हो रहा है",
+    orders: "📦 ऑर्डर", ordersT: "आपके ऑर्डर", ordersNone: "अभी कोई ऑर्डर नहीं है। ग्राहक के ऑर्डर करते ही यहाँ दिखेगा। 🙏",
+    oAll: "सभी", oNew: "नए", oOpen: "चल रहे", oDone: "डिलीवर", oOff: "रद्द", oHint: "हर नया ऑर्डर आपको WhatsApp पर भी मिलेगा, उस पर काम करने के बटन के साथ।",
+    st: { placed: "🆕 नया", sent_to_supplier: "📤 सप्लायर के पास", accepted: "📦 पैक", dispatched: "🚚 भेजा गया", delivered: "✅ डिलीवर", cancelled: "❌ रद्द", out_of_stock: "❌ स्टॉक खत्म" },
+    stSup: { sent_to_supplier: "🆕 नया", accepted: "📦 पैक", dispatched: "🚚 भेजा गया", delivered: "✅ डिलीवर", cancelled: "❌ रद्द", out_of_stock: "❌ स्टॉक खत्म" },
+    paidL: { paid: "भुगतान हुआ", claimed: "भुगतान पक्का करना है", unpaid: "भुगतान बाकी" }, cod: "कैश ऑन डिलीवरी", upiL: "UPI", newOrder: "📦 आपको नया ऑर्डर मिला है। धन्यवाद!",
+    margin: (m) => `आपकी कमाई ${m}`, track: "ट्रैक करें", fromWeb: "वेब ऑर्डर", call: "कॉल",
     liveTill: (d) => `⏳ ${d} तक लाइव`, liveAlways: "⏳ बिकने तक लाइव", extend: "⏳ बढ़ाएँ", sold: "बिक गया",
     soldAsk: "क्या यह प्रोडक्ट बिक गया है? यह अभी हर रीसेलर के पेज से हट जाएगा।", soldOk: "धन्यवाद। प्रोडक्ट बिक गया दर्ज हो गया।",
     extAsk: "यह और कितने दिन लाइव रहे? कृपया 1 से 90 तक दिनों की कोई भी संख्या लिखें, या बिकने तक लाइव रखने के लिए 0 लिखें।", extOk: (d) => `धन्यवाद। अब यह ${d} लाइव है।`,
@@ -144,6 +167,13 @@ const T = {
     vopen: "फोनच्या व्हिडिओ प्लेयरमध्ये उघडा ↗", vfail: "हा ब्राउझर व्हिडिओ चालवू शकला नाही. खालच्या बटणाने फोनच्या प्लेयरमध्ये उघडा.",
     code: "कोड", codeAsk: "तुमचा जोडण्याचा कोड (2–6 अक्षरे किंवा अंक). रीसेलर JOIN + हा कोड पाठवून जोडतात, आणि प्रॉडक्ट नंबर यानेच सुरू होतात. जुन्या कोडच्या लिंक चालणं बंद होईल.", codeSet: (c) => `कोड ${c} झाला. तुमची नवी जोडण्याची लिंक शेअर करा.`, codeBad: "हा कोड आधीच घेतला आहे किंवा चालणार नाही. दुसरा वापरा (2–6 अक्षरे).",
     rename: "नाव", renameAsk: "तुमच्या व्यवसायाचं नाव, जसं ग्राहक आणि रीसेलरना दिसावं:", renamed: "नाव सेव्ह झालं.", renameBad: "हे नाव चालणार नाही. 2–40 अक्षरे ठेवा.",
+    left: (t) => `⏳ ${t} बाकी`, dh: (d, h) => `${d}दि ${h}ता`, hm: (h, m) => `${h}ता ${m}मि`, mm: (m) => `${m}मि`, endingNow: "⏳ आत्ता संपत आहे",
+    orders: "📦 ऑर्डर", ordersT: "तुमच्या ऑर्डर", ordersNone: "अजून ऑर्डर नाहीत. ग्राहकाने ऑर्डर करताच इथे दिसेल. 🙏",
+    oAll: "सर्व", oNew: "नवीन", oOpen: "चालू", oDone: "डिलिव्हर", oOff: "रद्द", oHint: "प्रत्येक नवीन ऑर्डर तुम्हाला WhatsApp वरही मिळेल, त्यावर काम करण्याच्या बटणांसह.",
+    st: { placed: "🆕 नवीन", sent_to_supplier: "📤 सप्लायरकडे", accepted: "📦 पॅक", dispatched: "🚚 पाठवली", delivered: "✅ डिलिव्हर", cancelled: "❌ रद्द", out_of_stock: "❌ स्टॉक संपला" },
+    stSup: { sent_to_supplier: "🆕 नवीन", accepted: "📦 पॅक", dispatched: "🚚 पाठवली", delivered: "✅ डिलिव्हर", cancelled: "❌ रद्द", out_of_stock: "❌ स्टॉक संपला" },
+    paidL: { paid: "पैसे मिळाले", claimed: "पैसे तपासायचे", unpaid: "पैसे बाकी" }, cod: "कॅश ऑन डिलिव्हरी", upiL: "UPI", newOrder: "📦 तुम्हाला नवीन ऑर्डर मिळाली आहे. धन्यवाद!",
+    margin: (m) => `तुमची कमाई ${m}`, track: "ट्रॅक करा", fromWeb: "वेब ऑर्डर", call: "कॉल",
     liveTill: (d) => `⏳ ${d} पर्यंत लाइव्ह`, liveAlways: "⏳ विकले जाईपर्यंत लाइव्ह", extend: "⏳ वाढवा", sold: "विकले गेले",
     soldAsk: "हा प्रॉडक्ट विकला गेला आहे का? तो आत्ता प्रत्येक रीसेलरच्या पेजवरून जाईल.", soldOk: "धन्यवाद. प्रॉडक्ट विकला गेला अशी नोंद झाली.",
     extAsk: "तो आणखी किती दिवस लाइव्ह ठेवायचा? कृपया 1 ते 90 पैकी कितीही दिवस लिहा, किंवा विकले जाईपर्यंत ठेवण्यासाठी 0 लिहा.", extOk: (d) => `धन्यवाद. आता तो ${d} लाइव्ह आहे.`,
@@ -257,6 +287,7 @@ function render() {
   const t2 = [];
   if (data?.role === "supplier") t2.push(`<a href="add.html?c=${encodeURIComponent(tok)}">${L.addp}</a>`, `<a href="invite.html?c=${encodeURIComponent(tok)}">${L.inv}</a>`);
   if (data) t2.push(`<button id="nameBtn">✏️ ${L.rename}</button>`);
+  if (data) t2.push(`<button id="ordersBtn">${L.orders}${oFresh ? `<span class="badge">${oFresh}</span>` : ""}</button>`);
   if (data?.role === "supplier") t2.push(`<button id="endedBtn">${L.ended}</button>`);
   if (data?.role === "supplier") t2.push(`<button id="codeBtn">🔤 ${L.code}${data.code ? `: ${esc(data.code)}` : ""}</button>`);
   if (data) t2.push(`<button id="logoBtn">${data.logo ? `<img src="${esc(data.logo)}" alt="">` : "🖼"} ${L.logo}</button>`);
@@ -271,17 +302,71 @@ function render() {
         ${p.img ? `<img loading="lazy" src="${esc(p.img)}" alt="">` : p.vid ? `<video src="${esc(p.vid)}#t=0.5" preload="metadata" muted playsinline></video>` : ""}
         ${p.vid ? `<button class="play" data-play="${p.key}" aria-label="${L.vbtn}">▶</button>` : ""}
         <span class="tick">${picked.has(p.key) ? "✓" : ""}</span>
+        ${p.live_until && p.live_until !== "infinity" ? `<span class="timer" data-end="${esc(p.live_until)}"></span>` : ""}
         ${p.price ? `<span class="price">${rupees(p.price)}</span>` : `<span class="noprice">${L.noprice}</span>`}
         ${p.photos > 1 || p.videos ? `<span class="count">${[p.photos > 1 ? L.photos(p.photos) : "", p.videos ? L.vids(p.videos) : ""].filter(Boolean).join(" · ")}</span>` : ""}
       </div>
       <div class="meta"><b>${esc(p.title)}</b><small>${esc([p.code, p.sizes.slice(0, 4).join(" "), p.supplier].filter(Boolean).join(" · "))}</small>
         ${p.stars ? `<div class="stars">${"★".repeat(Math.round(p.stars))}${"☆".repeat(5 - Math.round(p.stars))} ${Number(p.stars).toFixed(1)} <span>· ${L.ordered(p.orders)}</span></div>` : ""}
         ${p.desc && p.desc !== p.title ? `<div class="desc" data-desc>${esc(p.desc)}</div>` : ""}
-        ${data.role === "supplier" ? `<div class="live"><span>${p.live_until === "infinity" || !p.live_until ? L.liveAlways : L.liveTill(fmtDay(p.live_until))}</span><button data-ext="${p.key}">${L.extend}</button><button data-sold="${p.key}">${L.sold}</button></div>` : ""}
+        ${data.role === "supplier" ? `<div class="live"><span>${p.live_until === "infinity" || !p.live_until ? L.liveAlways : L.liveTill(fmtDay(p.live_until) + " " + new Date(p.live_until).toLocaleTimeString((data?.lang || "en") + "-IN", { hour: "numeric", minute: "2-digit" }))}</span><button data-ext="${p.key}">${L.extend}</button><button data-sold="${p.key}">${L.sold}</button></div>` : ""}
         <div class="btns"><button class="one" data-one="${p.key}">${L.one}</button>${p.videos && p.photos ? `<button class="one" data-vid="${p.key}">${L.vbtn}</button>` : ""}</div></div>
     </div>`).join("");
   foot();
+  tick();
 }
+
+// Countdown on every product: when it leaves sale. Updated every 30 seconds.
+function leftText(ms) {
+  if (ms <= 0) return L.endingNow;
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  return L.left(d ? L.dh(d, h % 24) : h ? L.hm(h, m % 60) : L.mm(Math.max(1, m)));
+}
+function tick() {
+  const now = Date.now();
+  for (const el of document.querySelectorAll("[data-end]")) {
+    const ms = new Date(el.dataset.end).getTime() - now;
+    el.textContent = leftText(ms);
+    el.classList.toggle("soon", ms < 24 * 3600000);
+  }
+}
+setInterval(tick, 30000);
+
+// Orders: shown on the page and kept up to date; WhatsApp alerts continue as before.
+let oList = [], oFresh = 0, oFilter = "all", ordersVer = null;
+async function loadOrders() {
+  try { const r = await RR.call("orders", {}); oList = r.orders || []; oFresh = r.fresh || 0; } catch { return false; }
+  const b = $("ordersBtn"); if (b) b.innerHTML = `${L.orders}${oFresh ? `<span class="badge">${oFresh}</span>` : ""}`;
+  if (!$("ordersBox").hidden) renderOrders();
+  return true;
+}
+function renderOrders() {
+  const sup = data?.role === "supplier", ST = sup ? L.stSup : L.st;
+  const isNew = (o) => o.status === (sup ? "sent_to_supplier" : "placed");
+  const groups = { all: () => true, new: isNew, open: (o) => !isNew(o) && ["sent_to_supplier", "accepted", "dispatched"].includes(o.status),
+    done: (o) => o.status === "delivered", off: (o) => ["cancelled", "out_of_stock"].includes(o.status) };
+  const names = { all: L.oAll, new: L.oNew, open: L.oOpen, done: L.oDone, off: L.oOff };
+  $("ochips").innerHTML = Object.keys(groups).map((k) => `<button class="chip${k === oFilter ? " on" : ""}" data-of="${k}">${names[k]} (${oList.filter(groups[k]).length})</button>`).join("");
+  const rows = oList.filter(groups[oFilter]);
+  const when = (iso) => new Date(iso).toLocaleString((data?.lang || "en") + "-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+  $("ordersL").innerHTML = rows.length ? rows.map((o) => `<div class="orow">
+      <div class="top"><b>${esc(o.no)} · ${esc(o.title || "")}</b><span class="st">${esc(ST[o.status] || o.status)}</span></div>
+      <small>${esc([o.size ? `${o.size} × ${o.qty}` : `× ${o.qty}`, o.amount != null ? rupees(o.amount) : "", o.margin != null && o.margin > 0 ? L.margin(rupees(o.margin)) : "", o.pay === "cod" ? L.cod : L.upiL, L.paidL[o.paid] || ""].filter(Boolean).join(" · "))}</small>
+      <small>${esc([o.customer, o.with, when(o.placed_at), o.web ? L.fromWeb : ""].filter(Boolean).join(" · "))}</small>
+      ${o.address ? `<small>📍 ${esc(o.address)}</small>` : ""}
+      <div>${o.phone && !sup ? `<a href="tel:${esc(o.phone)}">📞 ${L.call}</a>` : ""}${o.tracking ? `<a href="https://www.google.com/search?q=${encodeURIComponent(o.tracking + " tracking")}" target="_blank" rel="noopener">🚚 ${L.track} ${esc(o.tracking)}</a>` : ""}</div>
+    </div>`).join("") : `<div class="empty">${L.ordersNone}</div>`;
+}
+async function showOrders() {
+  $("ordersT").textContent = L.ordersT; $("ordersX").textContent = L.close; $("ohint").textContent = L.oHint;
+  $("ordersBox").hidden = false; $("ordersL").innerHTML = "…";
+  if (!(await loadOrders())) $("ordersL").innerHTML = `<div class="empty">${L.tryAgain}</div>`; else renderOrders();
+}
+$("ordersX").addEventListener("click", () => { $("ordersBox").hidden = true; });
+$("ordersBox").addEventListener("click", (e) => {
+  if (e.target.id === "ordersBox") { $("ordersBox").hidden = true; return; }
+  const c = e.target.closest("[data-of]"); if (c) { oFilter = c.dataset.of; renderOrders(); }
+});
 
 function foot() {
   $("foot").classList.toggle("show", picked.size > 0);
@@ -403,6 +488,7 @@ $("sort").addEventListener("change", render);
 $("tools2").addEventListener("click", async (e) => {
   if (e.target.closest("#logoBtn")) { $("fLogo").click(); return; }
   if (e.target.closest("#endedBtn")) { showEnded(); return; }
+  if (e.target.closest("#ordersBtn")) { showOrders(); return; }
   if (e.target.closest("#codeBtn")) {
     const c = prompt(L.codeAsk, data?.code || "");
     if (c === null || !c.trim() || c.trim().toUpperCase() === data?.code) return;
@@ -436,9 +522,15 @@ async function checkLive() {
   try {
     const r = await fetch(`${API}?c=${encodeURIComponent(tok)}&act=ver`, { cache: "no-store" });
     if (!r.ok) return;
-    const { v } = await r.json();
+    const { v, ov } = await r.json();
     if (ver !== null && v !== ver) { await load(true); toast(L.updated, 3500); }
     ver = v;
+    if (ov !== undefined && ov !== ordersVer) {
+      const before = oFresh, first = ordersVer === null;
+      ordersVer = ov;
+      await loadOrders();
+      if (!first && oFresh > before) toast(L.newOrder, 5000);
+    }
   } catch {}
 }
 setInterval(checkLive, 20000);
