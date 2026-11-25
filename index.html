@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f766e">
 <meta name="robots" content="noindex">
+<link rel="manifest" href="shop.webmanifest">
+<link rel="apple-touch-icon" href="lib/icon-192.png">
 <title>My catalogue · Resell Ready</title>
 <style>
   :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --brand-soft:#e6f4f1; --red:#c1121f; --bg:#f6f7f8; }
@@ -103,14 +105,14 @@
 "use strict";
 const API = "https://obgedilcyvaaewpvvdzi.supabase.co/functions/v1/shop";
 const T = {
-  en: { title: "My catalogue", sub: (n, s) => `${n} products${s ? " · " + s : ""}`, days: ["Today", "3 days", "7 days", "30 days"], search: "Search (kurti, saree, 599…)",
+  en: { title: "My catalogue", sub: (n, s) => `${n} products${s ? " · " + s : ""}`, days: ["All live", "New today", "3 days", "7 days"], updated: "🆕 Your catalogue has just been updated.", search: "Search (kurti, saree, 599…)",
     tapShare: "Ready. Tap to share",
     vopen: "Open in phone’s video player ↗", vfail: "We’re sorry, this browser couldn’t play the video. Please tap the button below to open it in your phone’s video player.",
     code: "Code", codeAsk: "Your joining code (2–6 letters or numbers). Resellers join with JOIN + this code, and your product numbers start with it. Links you shared with the old code will stop working.", codeSet: (c) => `Code changed to ${c}. Share your new joining link.`, codeBad: "We’re sorry, that code is already in use or not allowed. Please try another one (2–6 letters or numbers).",
     rename: "Name", renameAsk: "Please enter your business name, exactly as you would like customers and resellers to see it:", renamed: "Thank you. Your name has been saved.", renameBad: "We’re sorry, that name can’t be used. Please use 2–40 letters.",
     liveTill: (d) => `⏳ Live till ${d}`, liveAlways: "⏳ Live until sold out", extend: "⏳ Extend", sold: "Sold out",
     soldAsk: "Mark this product as sold out? It will leave every reseller’s page now.", soldOk: "Thank you. The product has been marked as sold out.",
-    extAsk: "How many more days should it stay live? Please enter 3, 7, 15 or 30, or 0 to keep it live until it is sold out.", extOk: (d) => `Thank you. It is now live ${d}.`,
+    extAsk: "How many more days should it stay live? Please enter any number of days from 1 to 90, or 0 to keep it live until it is sold out.", extOk: (d) => `Thank you. It is now live ${d}.`,
     ended: "⏳ Ended", endedT: "Ended products", endedNone: "There are no ended products. 👍", relist: "Re-list for 7 days", relistOk: "Thank you. The product is live again for 7 days.",
     endedOn: (d) => `Ended ${d}`, close: "Close", tryAgain: "We’re sorry, that didn’t work. Please try again.", till: (d) => `till ${d}`, always: "until sold out",
     addp: "＋ Add products", inv: "👥 Invite resellers", logo: "Logo", logoSet: "Thank you. Your logo has been saved and will appear on new photos.", logoFail: "We’re sorry, the logo couldn’t be saved. Please try again.",
@@ -120,14 +122,14 @@ const T = {
     wait: "Preparing your photos, please wait…", copied: "The caption has been copied. If WhatsApp doesn’t show it, please paste it.", max: "Please select up to 10 products at a time.", sold: "Please note: some products are sold out and were skipped.",
     added: (n) => n ? `${n} added to your website.` : "Already on your website.", photos: (n) => `${n} photos`, vids: (n) => `▶ ${n} video${n > 1 ? "s" : ""}`, vbtn: "▶ Video", close: "Close", bigvid: "This video is large and may take a while to download.",
     newest: "Newest", popular: "Most ordered", ordered: (n) => `${n} ordered`, noprice: "Price not given", newr: "New", you: "Your rating", more: "more", nofile: "Your phone can’t share photos directly from here. The text has been copied and WhatsApp will open; you can save the photos by pressing and holding them." },
-  hi: { title: "मेरा कैटलॉग", sub: (n, s) => `${n} प्रोडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिन", "7 दिन", "30 दिन"], search: "खोजें (कुर्ती, साड़ी, 599…)",
+  hi: { title: "मेरा कैटलॉग", sub: (n, s) => `${n} प्रोडक्ट${s ? " · " + s : ""}`, days: ["सभी लाइव", "आज के नए", "3 दिन", "7 दिन"], updated: "🆕 आपका कैटलॉग अभी अपडेट हुआ है।", search: "खोजें (कुर्ती, साड़ी, 599…)",
     tapShare: "तैयार है। शेयर करने के लिए टैप करें",
     vopen: "फ़ोन के वीडियो प्लेयर में खोलें ↗", vfail: "यह ब्राउज़र वीडियो नहीं चला पाया। नीचे के बटन से फ़ोन के प्लेयर में खोलें।",
     code: "कोड", codeAsk: "आपका जुड़ने का कोड (2–6 अक्षर या अंक)। रीसेलर JOIN + यह कोड भेजकर जुड़ते हैं, और प्रोडक्ट नंबर इसी से शुरू होते हैं। पुराने कोड वाले लिंक काम करना बंद कर देंगे।", codeSet: (c) => `कोड ${c} हो गया। अपना नया जुड़ने का लिंक शेयर करें।`, codeBad: "यह कोड पहले से लिया है या नहीं चल सकता। दूसरा आज़माएँ (2–6 अक्षर)।",
     rename: "नाम", renameAsk: "आपके बिज़नेस का नाम, जैसा ग्राहक और रीसेलर देखें:", renamed: "नाम सेव हो गया।", renameBad: "यह नाम नहीं चल सकता। 2–40 अक्षर रखें।",
     liveTill: (d) => `⏳ ${d} तक लाइव`, liveAlways: "⏳ बिकने तक लाइव", extend: "⏳ बढ़ाएँ", sold: "बिक गया",
     soldAsk: "क्या यह प्रोडक्ट बिक गया है? यह अभी हर रीसेलर के पेज से हट जाएगा।", soldOk: "धन्यवाद। प्रोडक्ट बिक गया दर्ज हो गया।",
-    extAsk: "यह और कितने दिन लाइव रहे? कृपया 3, 7, 15 या 30 लिखें, या बिकने तक लाइव रखने के लिए 0 लिखें।", extOk: (d) => `धन्यवाद। अब यह ${d} लाइव है।`,
+    extAsk: "यह और कितने दिन लाइव रहे? कृपया 1 से 90 तक दिनों की कोई भी संख्या लिखें, या बिकने तक लाइव रखने के लिए 0 लिखें।", extOk: (d) => `धन्यवाद। अब यह ${d} लाइव है।`,
     ended: "⏳ समाप्त", endedT: "समाप्त प्रोडक्ट", endedNone: "कोई समाप्त प्रोडक्ट नहीं है। 👍", relist: "7 दिन के लिए फिर लाइव करें", relistOk: "धन्यवाद। प्रोडक्ट 7 दिन के लिए फिर लाइव है।",
     endedOn: (d) => `${d} को समाप्त`, close: "बंद करें", tryAgain: "क्षमा करें, यह नहीं हुआ। कृपया फिर कोशिश करें।", till: (d) => `${d} तक`, always: "बिकने तक",
     addp: "＋ प्रोडक्ट जोड़ें", inv: "👥 रीसेलर बुलाएँ", logo: "लोगो", logoSet: "लोगो सेव हो गया। नई फ़ोटो पर दिखेगा।", logoFail: "लोगो सेव नहीं हुआ। फिर कोशिश करें।",
@@ -137,14 +139,14 @@ const T = {
     wait: "फ़ोटो तैयार हो रही हैं…", copied: "कैप्शन कॉपी हो गया। WhatsApp में न दिखे तो पेस्ट करें।", max: "एक बार में 10 तक।", sold: "कुछ प्रोडक्ट ख़त्म हो गए, उन्हें छोड़ दिया।",
     added: (n) => n ? `${n} आपकी वेबसाइट पर लगाए।` : "पहले से आपकी वेबसाइट पर हैं।", photos: (n) => `${n} फ़ोटो`, vids: (n) => `▶ ${n} वीडियो`, vbtn: "▶ वीडियो", close: "बंद करें", bigvid: "यह वीडियो बड़ा है, डाउनलोड में समय लग सकता है।",
     newest: "नए पहले", popular: "सबसे ज़्यादा ऑर्डर", ordered: (n) => `${n} ऑर्डर`, noprice: "कीमत नहीं दी", newr: "नया", you: "आपकी रेटिंग", more: "और", nofile: "आपका फ़ोन यहाँ से फ़ोटो शेयर नहीं कर सकता। टेक्स्ट कॉपी हो गया है और WhatsApp खुलेगा; फ़ोटो को दबाकर सेव करें।" },
-  mr: { title: "माझा कॅटलॉग", sub: (n, s) => `${n} प्रॉडक्ट${s ? " · " + s : ""}`, days: ["आज", "3 दिवस", "7 दिवस", "30 दिवस"], search: "शोधा (कुर्ती, साडी, 599…)",
+  mr: { title: "माझा कॅटलॉग", sub: (n, s) => `${n} प्रॉडक्ट${s ? " · " + s : ""}`, days: ["सर्व लाइव्ह", "आजचे नवे", "3 दिवस", "7 दिवस"], updated: "🆕 तुमचा कॅटलॉग आत्ताच अपडेट झाला आहे.", search: "शोधा (कुर्ती, साडी, 599…)",
     tapShare: "तयार आहे. शेअर करण्यासाठी टॅप करा",
     vopen: "फोनच्या व्हिडिओ प्लेयरमध्ये उघडा ↗", vfail: "हा ब्राउझर व्हिडिओ चालवू शकला नाही. खालच्या बटणाने फोनच्या प्लेयरमध्ये उघडा.",
     code: "कोड", codeAsk: "तुमचा जोडण्याचा कोड (2–6 अक्षरे किंवा अंक). रीसेलर JOIN + हा कोड पाठवून जोडतात, आणि प्रॉडक्ट नंबर यानेच सुरू होतात. जुन्या कोडच्या लिंक चालणं बंद होईल.", codeSet: (c) => `कोड ${c} झाला. तुमची नवी जोडण्याची लिंक शेअर करा.`, codeBad: "हा कोड आधीच घेतला आहे किंवा चालणार नाही. दुसरा वापरा (2–6 अक्षरे).",
     rename: "नाव", renameAsk: "तुमच्या व्यवसायाचं नाव, जसं ग्राहक आणि रीसेलरना दिसावं:", renamed: "नाव सेव्ह झालं.", renameBad: "हे नाव चालणार नाही. 2–40 अक्षरे ठेवा.",
     liveTill: (d) => `⏳ ${d} पर्यंत लाइव्ह`, liveAlways: "⏳ विकले जाईपर्यंत लाइव्ह", extend: "⏳ वाढवा", sold: "विकले गेले",
     soldAsk: "हा प्रॉडक्ट विकला गेला आहे का? तो आत्ता प्रत्येक रीसेलरच्या पेजवरून जाईल.", soldOk: "धन्यवाद. प्रॉडक्ट विकला गेला अशी नोंद झाली.",
-    extAsk: "तो आणखी किती दिवस लाइव्ह ठेवायचा? कृपया 3, 7, 15 किंवा 30 लिहा, किंवा विकले जाईपर्यंत ठेवण्यासाठी 0 लिहा.", extOk: (d) => `धन्यवाद. आता तो ${d} लाइव्ह आहे.`,
+    extAsk: "तो आणखी किती दिवस लाइव्ह ठेवायचा? कृपया 1 ते 90 पैकी कितीही दिवस लिहा, किंवा विकले जाईपर्यंत ठेवण्यासाठी 0 लिहा.", extOk: (d) => `धन्यवाद. आता तो ${d} लाइव्ह आहे.`,
     ended: "⏳ संपलेले", endedT: "संपलेले प्रॉडक्ट", endedNone: "संपलेले प्रॉडक्ट नाहीत. 👍", relist: "7 दिवसांसाठी पुन्हा लाइव्ह करा", relistOk: "धन्यवाद. प्रॉडक्ट 7 दिवसांसाठी पुन्हा लाइव्ह आहे.",
     endedOn: (d) => `${d} ला संपले`, close: "बंद करा", tryAgain: "क्षमस्व, हे झाले नाही. कृपया पुन्हा प्रयत्न करा.", till: (d) => `${d} पर्यंत`, always: "विकले जाईपर्यंत",
     addp: "＋ प्रॉडक्ट जोडा", inv: "👥 रीसेलर बोलवा", logo: "लोगो", logoSet: "लोगो सेव्ह झाला. नव्या फोटोंवर दिसेल.", logoFail: "लोगो सेव्ह झाला नाही. पुन्हा प्रयत्न करा.",
@@ -155,10 +157,11 @@ const T = {
     added: (n) => n ? `${n} तुमच्या वेबसाइटवर लावले.` : "आधीच तुमच्या वेबसाइटवर आहेत.", photos: (n) => `${n} फोटो`, vids: (n) => `▶ ${n} व्हिडिओ`, vbtn: "▶ व्हिडिओ", close: "बंद करा", bigvid: "हा व्हिडिओ मोठा आहे, डाउनलोडला वेळ लागू शकतो.",
     newest: "नवे आधी", popular: "सर्वाधिक ऑर्डर", ordered: (n) => `${n} ऑर्डर`, noprice: "किंमत दिली नाही", newr: "नवीन", you: "तुमचं रेटिंग", more: "आणखी", nofile: "तुमचा फोन इथून फोटो शेअर करू शकत नाही. टेक्स्ट कॉपी झालं आहे आणि WhatsApp उघडेल; फोटो दाबून ठेवून सेव्ह करा." },
 };
-const DAYS = [1, 3, 7, 30];
+const DAYS = [0, 1, 3, 7]; // 0 = everything live now
 const $ = (id) => document.getElementById(id);
-const tok = new URLSearchParams(location.search).get("c") || location.hash.slice(1);
-let L = T.en, data = null, days = 3;
+// the link's key; opened from the home-screen icon, the page uses the one saved last time
+const tok = new URLSearchParams(location.search).get("c") || location.hash.slice(1) || (() => { try { return localStorage.getItem("rr_cat_tok") || ""; } catch { return ""; } })();
+let L = T.en, data = null, days = 0, ver = null;
 const picked = new Set();
 
 function toast(msg, ms = 2600) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), ms); }
@@ -178,15 +181,16 @@ function labels() {
   $("days").innerHTML = DAYS.map((d, i) => `<button class="chip${d === days ? " on" : ""}" data-d="${d}">${L.days[i]}</button>`).join("");
 }
 
-async function load() {
+async function load(quiet) {
   if (!tok) { $("grid").innerHTML = `<div class="err">${L.bad}</div>`; labels(); return; }
-  busy(true);
+  if (!quiet) busy(true);
   try {
-    const res = await fetch(`${API}?c=${encodeURIComponent(tok)}&days=${days}`);
+    const res = await fetch(`${API}?c=${encodeURIComponent(tok)}&days=${days}`, { cache: "no-store" });
     if (res.status === 404) { $("grid").innerHTML = `<div class="err">${L.bad}</div>`; return; }
     if (!res.ok) throw new Error(res.status);
     data = await res.json();
     L = T[data.lang] || T.en;
+    try { localStorage.setItem("rr_cat_tok", tok); if (data.role === "supplier") localStorage.setItem("rr_sup_tok", tok); } catch {}
     labels();
     const sel = $("sup");
     sel.hidden = !(data.suppliers?.length > 1);
@@ -223,7 +227,7 @@ $("grid").addEventListener("click", async (e) => {
     const v = prompt(L.extAsk, "7");
     if (v === null) return;
     const d = Number(String(v).trim());
-    if (![0, 3, 7, 15, 30].includes(d)) { alert(L.extAsk); return; }
+    if (!Number.isInteger(d) || d < 0 || d > 90) { alert(L.extAsk); return; }
     const r = await RR.call("relist", { key: Number(ext.dataset.ext), days: d });
     toast(L.extOk(r.live_until === "infinity" ? L.always : L.till(fmtDay(r.live_until))), 3500); load();
   } catch { toast(L.tryAgain, 3500); }
@@ -426,7 +430,21 @@ $("share").addEventListener("click", () => share([...picked]));
 $("clear").addEventListener("click", () => { picked.clear(); render(); });
 $("web").addEventListener("click", toWebsite);
 labels();
-load();
+// Live: check every 20 seconds while the page is open (a tiny request) and refresh when anything changed.
+async function checkLive() {
+  if (document.hidden || !tok || !data) return;
+  try {
+    const r = await fetch(`${API}?c=${encodeURIComponent(tok)}&act=ver`, { cache: "no-store" });
+    if (!r.ok) return;
+    const { v } = await r.json();
+    if (ver !== null && v !== ver) { await load(true); toast(L.updated, 3500); }
+    ver = v;
+  } catch {}
+}
+setInterval(checkLive, 20000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkLive(); });
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+load().then(checkLive);
 </script>
 </body>
 </html>

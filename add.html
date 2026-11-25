@@ -68,7 +68,7 @@
 <script src="lib/up.js"></script>
 <script>
 const T = {
-  en: { liveL: "⏳ Keep these products live for", liveO: ["3 days", "7 days", "15 days", "30 days", "Until sold out"],
+  en: { liveL: "⏳ Keep these products live for", liveO: ["3 days", "7 days", "15 days", "30 days", "Until sold out"], other: "Other…", nDays: (n) => `${n} days`, askDays: "For how many days should these products stay live? Please enter a number from 1 to 90.",
     liveS: "After this, they move out of every reseller’s page automatically. You can re-list them from your catalogue at any time.",
     liveDone: (d) => d ? `They will stay live for ${d} days, then move out automatically.` : "They will stay live until you mark them sold out.",
     shared: (n) => `Thank you. ${n} photo${n === 1 ? "" : "s"} received. Please add the name and price under each one.`,
@@ -85,7 +85,7 @@ const T = {
     more: "Add more", open: "Open catalogue", fail: "We’re sorry, the upload didn’t complete. Please check your internet connection and try again.", bad: "We’re sorry, this link is no longer valid. Please send *catalogue* to the bot to receive a new one.",
     onlySup: "Only suppliers can add products.", wordFail: "We’re sorry, we couldn’t read this Word file. Please save it as .docx and try again.", sheetFail: "We’re sorry, we couldn’t read this sheet. Please check the file and try again.",
     norows: "We couldn’t find any products in the sheet. Please make sure the first row has the column names." },
-  hi: { liveL: "⏳ ये प्रोडक्ट कितने दिन लाइव रहें", liveO: ["3 दिन", "7 दिन", "15 दिन", "30 दिन", "बिकने तक"],
+  hi: { liveL: "⏳ ये प्रोडक्ट कितने दिन लाइव रहें", liveO: ["3 दिन", "7 दिन", "15 दिन", "30 दिन", "बिकने तक"], other: "अन्य…", nDays: (n) => `${n} दिन`, askDays: "ये प्रोडक्ट कितने दिन लाइव रहें? कृपया 1 से 90 तक कोई संख्या लिखें।",
     liveS: "इसके बाद ये हर रीसेलर के पेज से अपने आप हट जाएँगे। आप कैटलॉग से इन्हें कभी भी दोबारा लाइव कर सकते हैं।",
     liveDone: (d) => d ? `ये ${d} दिन लाइव रहेंगे, फिर अपने आप हट जाएँगे।` : "ये तब तक लाइव रहेंगे जब तक आप इन्हें बिक गया नहीं बताते।",
     shared: (n) => `धन्यवाद। ${n} फ़ोटो मिल गईं। कृपया हर एक के नीचे नाम और कीमत लिखें।`,
@@ -102,7 +102,7 @@ const T = {
     more: "और जोड़ें", open: "कैटलॉग खोलें", fail: "अपलोड नहीं हुआ। इंटरनेट देखें और फिर कोशिश करें।", bad: "यह लिंक काम नहीं कर रहा। बॉट को *catalogue* भेजें।",
     onlySup: "प्रोडक्ट सिर्फ़ सप्लायर जोड़ सकते हैं।", wordFail: "यह Word फ़ाइल पढ़ी नहीं गई। .docx में सेव करके फिर कोशिश करें।", sheetFail: "यह शीट पढ़ी नहीं गई।",
     norows: "शीट में प्रोडक्ट नहीं मिले। पहली लाइन में कॉलम के नाम होने चाहिए।" },
-  mr: { liveL: "⏳ हे प्रॉडक्ट किती दिवस लाइव्ह ठेवायचे", liveO: ["3 दिवस", "7 दिवस", "15 दिवस", "30 दिवस", "विकले जाईपर्यंत"],
+  mr: { liveL: "⏳ हे प्रॉडक्ट किती दिवस लाइव्ह ठेवायचे", liveO: ["3 दिवस", "7 दिवस", "15 दिवस", "30 दिवस", "विकले जाईपर्यंत"], other: "इतर…", nDays: (n) => `${n} दिवस`, askDays: "हे प्रॉडक्ट किती दिवस लाइव्ह ठेवायचे? कृपया 1 ते 90 पैकी संख्या लिहा.",
     liveS: "यानंतर ते प्रत्येक रीसेलरच्या पेजवरून आपोआप जातील. कॅटलॉगमधून तुम्ही ते कधीही पुन्हा लाइव्ह करू शकता.",
     liveDone: (d) => d ? `ते ${d} दिवस लाइव्ह राहतील, मग आपोआप जातील.` : "तुम्ही विकले गेले असे सांगेपर्यंत ते लाइव्ह राहतील.",
     shared: (n) => `धन्यवाद. ${n} फोटो मिळाले. कृपया प्रत्येकाखाली नाव आणि किंमत लिहा.`,
@@ -130,7 +130,9 @@ const LIVE = [3, 7, 15, 30, 0];
 let liveDays = 7;
 function liveUI() {
   $("liveL").textContent = L.liveL; $("liveS").textContent = L.liveS;
-  $("liveC").innerHTML = LIVE.map((d, i) => `<button class="chip${d === liveDays ? " on" : ""}" data-live="${d}">${L.liveO[i]}</button>`).join("");
+  const custom = !LIVE.includes(liveDays);
+  $("liveC").innerHTML = LIVE.map((d, i) => `<button class="chip${d === liveDays ? " on" : ""}" data-live="${d}">${L.liveO[i]}</button>`).join("")
+    + `<button class="chip${custom ? " on" : ""}" data-live="other">${custom ? L.nDays(liveDays) : L.other}</button>`;
 }
 
 function tr() {
@@ -202,7 +204,17 @@ $("list").addEventListener("click", (e) => {
   render();
 });
 $("fMore").addEventListener("change", (e) => { if (moreFor >= 0) items[moreFor].files.push(...okFiles(e.target.files)); e.target.value = ""; render(); });
-$("liveC").addEventListener("click", (e) => { const b = e.target.closest("[data-live]"); if (!b) return; liveDays = Number(b.dataset.live); liveUI(); });
+$("liveC").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-live]"); if (!b) return;
+  if (b.dataset.live === "other") {
+    const v = prompt(L.askDays, String(LIVE.includes(liveDays) ? 10 : liveDays));
+    if (v === null) return;
+    const n = Number(String(v).trim());
+    if (!Number.isInteger(n) || n < 1 || n > 90) { alert(L.askDays); return; }
+    liveDays = n;
+  } else liveDays = Number(b.dataset.live);
+  liveUI();
+});
 
 // Photos shared from WhatsApp or the gallery (Android, once the page is on the home screen):
 // the service worker keeps them for a moment and opens this page with ?share=1.
@@ -343,7 +355,7 @@ $("go").addEventListener("click", async () => {
     tr();
     if (d.role !== "supplier") { $("list").innerHTML = `<div class="empty">${L.onlySup}</div>`; document.querySelector(".ways").hidden = true; return; }
     try { localStorage.setItem("rr_sup_tok", RR.tok); } catch {}
-    if (LIVE.includes(d.live_days)) liveDays = d.live_days;
+    if (Number.isInteger(d.live_days) && d.live_days >= 0 && d.live_days <= 90) liveDays = d.live_days;
     $("live").hidden = false; liveUI();
     render();
     await takeShared();
