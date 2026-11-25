@@ -49,6 +49,7 @@
   .qr { width:220px; max-width:70%; border-radius:12px; border:1px solid var(--line); display:block; margin:8px auto; }
   .empty { text-align:center; color:var(--muted); padding:60px 20px; font-size:15px; line-height:1.5; }
   .muted { color:var(--muted); font-size:13.5px; }
+  .askbtn { display:block; text-align:center; background:#16a34a; color:#fff; text-decoration:none; font-weight:600; padding:13px; border-radius:12px; }
   .ends { display:inline-block; margin-top:6px; background:#111827; color:#fff; font-size:12.5px; font-weight:600; padding:4px 9px; border-radius:999px; }
   .ends.soon { background:#b91c1c; }
 </style>
@@ -65,7 +66,7 @@ const TOK = qs.get("t"), KEY = qs.get("k");
 const T = {
   en: { ends: (t) => `⏳ Offer ends in ${t}`, endsNow: "⏳ Offer ending now", dh: (d, h) => `${d}d ${h}h`, hm: (h, m) => `${h}h ${m}m`, mm: (m) => `${m}m`, sub: "Secure order page", chat: "💬 Chat", size: "Select size", qty: "Quantity", details: "Delivery details", name: "Full name", phone: "WhatsApp / mobile number (10 digits)",
     addr: "House / flat, street, area, city", pin: "PIN code", pay: "Payment", cod: "Cash on delivery", upi: "Pay by UPI", price: "Price", delivery: "Delivery", free: "Free", total: "Total",
-    tbc: "Price to be confirmed by the seller", place: "Place order", placing: "Placing your order…", terms: (u) => `By placing this order, you agree to our <a href="${u}" target="_blank" rel="noopener">terms</a>.`,
+    tbc: "Price to be confirmed by the seller", noPrice: "The price for this product isn’t available yet. Please message the seller, who will be happy to help.", ask: "💬 Ask the seller on WhatsApp", place: "Place order", placing: "Placing your order…", terms: (u) => `By placing this order, you agree to our <a href="${u}" target="_blank" rel="noopener">terms</a>.`,
     e_size: "Please select a size.", e_name: "Please enter your name.", e_phone: "Please enter a valid 10-digit mobile number.", e_address: "Please enter your full address and a 6-digit PIN code.",
     e_pay: "Please choose a payment method.", e_slow: "You have placed several orders just now. Please wait a few minutes and try again.", e_sold_out: "We're sorry, this product has just sold out.",
     e_try: "We're sorry, something went wrong. Please try again.", gone: "We're sorry, this order link is no longer active. Please contact the seller who shared it with you.",
@@ -78,7 +79,7 @@ const T = {
     stopped: "This order was cancelled. If you have already paid, the seller will contact you about a refund.", again: "Order again", deliverTo: "Delivering to" },
   hi: { ends: (t) => `⏳ ऑफ़र ${t} में खत्म`, endsNow: "⏳ ऑफ़र अभी खत्म हो रहा है", dh: (d, h) => `${d}दि ${h}घं`, hm: (h, m) => `${h}घं ${m}मि`, mm: (m) => `${m}मि`, sub: "सुरक्षित ऑर्डर पेज", chat: "💬 चैट", size: "साइज़ चुनें", qty: "संख्या", details: "डिलीवरी की जानकारी", name: "पूरा नाम", phone: "WhatsApp / मोबाइल नंबर (10 अंक)",
     addr: "मकान / फ़्लैट, गली, इलाका, शहर", pin: "पिन कोड", pay: "भुगतान", cod: "डिलीवरी पर नकद", upi: "UPI से भुगतान", price: "कीमत", delivery: "डिलीवरी", free: "मुफ़्त", total: "कुल",
-    tbc: "कीमत विक्रेता बताएंगे", place: "ऑर्डर करें", placing: "आपका ऑर्डर हो रहा है…", terms: (u) => `ऑर्डर करके आप हमारी <a href="${u}" target="_blank" rel="noopener">शर्तों</a> से सहमत होते हैं।`,
+    tbc: "कीमत विक्रेता बताएंगे", noPrice: "इस प्रोडक्ट की कीमत अभी उपलब्ध नहीं है। कृपया विक्रेता को मैसेज करें, वे खुशी से मदद करेंगे।", ask: "💬 WhatsApp पर विक्रेता से पूछें", place: "ऑर्डर करें", placing: "आपका ऑर्डर हो रहा है…", terms: (u) => `ऑर्डर करके आप हमारी <a href="${u}" target="_blank" rel="noopener">शर्तों</a> से सहमत होते हैं।`,
     e_size: "कृपया साइज़ चुनें।", e_name: "कृपया अपना नाम लिखें।", e_phone: "कृपया सही 10 अंकों का मोबाइल नंबर लिखें।", e_address: "कृपया पूरा पता और 6 अंकों का पिन कोड लिखें।",
     e_pay: "कृपया भुगतान का तरीका चुनें।", e_slow: "आपने अभी कई ऑर्डर किए हैं। कृपया कुछ मिनट बाद फिर कोशिश करें।", e_sold_out: "माफ़ कीजिए, यह प्रोडक्ट अभी ख़त्म हो गया।",
     e_try: "माफ़ कीजिए, कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।", gone: "माफ़ कीजिए, यह ऑर्डर लिंक अब चालू नहीं है। कृपया लिंक भेजने वाले विक्रेता से संपर्क करें।",
@@ -91,7 +92,7 @@ const T = {
     stopped: "यह ऑर्डर रद्द हो गया। अगर आपने भुगतान कर दिया है, तो विक्रेता रिफ़ंड के लिए संपर्क करेंगे।", again: "फिर से ऑर्डर करें", deliverTo: "डिलीवरी का पता" },
   mr: { ends: (t) => `⏳ ऑफर ${t} मध्ये संपेल`, endsNow: "⏳ ऑफर आत्ता संपत आहे", dh: (d, h) => `${d}दि ${h}ता`, hm: (h, m) => `${h}ता ${m}मि`, mm: (m) => `${m}मि`, sub: "सुरक्षित ऑर्डर पेज", chat: "💬 चॅट", size: "साइज निवडा", qty: "संख्या", details: "डिलिव्हरीची माहिती", name: "पूर्ण नाव", phone: "WhatsApp / मोबाइल नंबर (10 अंक)",
     addr: "घर / फ्लॅट, गल्ली, भाग, शहर", pin: "पिन कोड", pay: "पेमेंट", cod: "डिलिव्हरीवर रोख", upi: "UPI ने पेमेंट", price: "किंमत", delivery: "डिलिव्हरी", free: "मोफत", total: "एकूण",
-    tbc: "किंमत विक्रेता सांगतील", place: "ऑर्डर करा", placing: "तुमची ऑर्डर होत आहे…", terms: (u) => `ऑर्डर करून तुम्ही आमच्या <a href="${u}" target="_blank" rel="noopener">अटी</a> मान्य करता.`,
+    tbc: "किंमत विक्रेता सांगतील", noPrice: "या प्रॉडक्टची किंमत अजून उपलब्ध नाही. कृपया विक्रेत्याला मेसेज करा, ते आनंदाने मदत करतील.", ask: "💬 WhatsApp वर विक्रेत्याला विचारा", place: "ऑर्डर करा", placing: "तुमची ऑर्डर होत आहे…", terms: (u) => `ऑर्डर करून तुम्ही आमच्या <a href="${u}" target="_blank" rel="noopener">अटी</a> मान्य करता.`,
     e_size: "कृपया साइज निवडा.", e_name: "कृपया तुमचं नाव लिहा.", e_phone: "कृपया योग्य 10 अंकी मोबाइल नंबर लिहा.", e_address: "कृपया पूर्ण पत्ता आणि 6 अंकी पिन कोड लिहा.",
     e_pay: "कृपया पेमेंटची पद्धत निवडा.", e_slow: "तुम्ही आत्ताच अनेक ऑर्डर केल्या आहेत. कृपया काही मिनिटांनी पुन्हा प्रयत्न करा.", e_sold_out: "माफ करा, हा प्रॉडक्ट आत्ताच संपला.",
     e_try: "माफ करा, काहीतरी चुकलं. कृपया पुन्हा प्रयत्न करा.", gone: "माफ करा, ही ऑर्डर लिंक आता चालू नाही. कृपया लिंक पाठवणाऱ्या विक्रेत्याशी संपर्क करा.",
@@ -133,6 +134,7 @@ function renderForm() {
     <div class="box"><h1>${esc(P.title)}</h1><div class="price">${P.price ? rs(P.price) : `<span class="muted">${L.tbc}</span>`}</div>${P.ends ? `<div class="ends" id="ends"></div>` : ""}
       ${P.desc ? `<div class="desc">${esc(P.desc)}</div>` : ""}<p class="muted" style="margin:8px 0 0">${esc(P.code)}</p></div>
     ${P.sizes.length ? `<div class="box"><span class="lbl">${L.size}</span><div class="chips" id="sizes">${P.sizes.map((s) => `<button class="chip ${sel.size === s ? "on" : ""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div></div>` : ""}
+    ${!P.price ? `<div class="box"><p style="margin:0 0 10px">${L.noPrice}</p>${P.chat ? `<a class="askbtn" href="${esc(P.chat)}?text=${encodeURIComponent(`${P.code} — ${P.title}`)}">${L.ask}</a>` : ""}</div>` : `
     <div class="box"><span class="lbl">${L.qty}</span><div class="qty"><button data-q="-1">−</button><span id="qn">1</span><button data-q="1">+</button></div></div>
     <div class="box f"><span class="lbl">${L.details}</span>
       <input id="nm" autocomplete="name" placeholder="${L.name}" value="${esc(saved.name || "")}">
@@ -143,7 +145,8 @@ function renderForm() {
       <button class="chip" data-p="cod">💵 ${L.cod}</button>${P.upi ? `<button class="chip" data-p="upi">📱 ${L.upi}</button>` : ""}</div></div>
     <div class="box sum" id="sum"></div>
     <p class="terms">${L.terms(esc(P.terms))}</p>
-    <div class="err" id="err"></div>`;
+    <div class="err" id="err"></div>`}`;
+  if (!P.price) { $("foot").hidden = true; return; }
   if (!P.upi) sel.pay = "cod";
   paint();
   $("place").textContent = L.place; $("foot").hidden = false;
