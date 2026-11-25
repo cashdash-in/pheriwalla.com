@@ -26,11 +26,14 @@
   .orow .top { display:flex; justify-content:space-between; gap:8px; } .orow .st { font-weight:600; white-space:nowrap; }
   .orow small { color:var(--muted); } .orow a { color:var(--brand); font-weight:600; text-decoration:none; margin-right:10px; }
   .ohint { font-size:12.5px; color:var(--muted); margin:0 0 8px; }
-  #ordersBox, #endedBox { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; display:flex; align-items:flex-end; justify-content:center; }
-  #endedBox[hidden], #ordersBox[hidden] { display:none; }
-  #ordersBox .sheet, #endedBox .sheet { background:#fff; width:100%; max-width:640px; max-height:85vh; overflow:auto; border-radius:16px 16px 0 0; padding:14px 14px calc(14px + env(safe-area-inset-bottom)); }
-  #ordersBox h3, #endedBox h3 { margin:0 0 10px; font-size:17px; display:flex; justify-content:space-between; align-items:center; }
-  #ordersBox h3 button, #endedBox h3 button { border:0; background:none; font:inherit; font-size:14px; color:var(--brand); cursor:pointer; }
+  .fld { display:grid; gap:5px; margin:0 0 12px; font-size:13.5px; color:var(--muted); }
+  .fld input { font:inherit; font-size:16px; padding:11px 12px; border:1px solid var(--line); border-radius:10px; color:var(--ink); }
+  .savebtn { width:100%; background:var(--brand); color:#fff; border:0; border-radius:12px; padding:13px; font:inherit; font-size:15.5px; font-weight:600; cursor:pointer; }
+  #editBox, #ordersBox, #endedBox { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:50; display:flex; align-items:flex-end; justify-content:center; }
+  #endedBox[hidden], #ordersBox[hidden], #editBox[hidden] { display:none; }
+  #editBox .sheet, #ordersBox .sheet, #endedBox .sheet { background:#fff; width:100%; max-width:640px; max-height:85vh; overflow:auto; border-radius:16px 16px 0 0; padding:14px 14px calc(14px + env(safe-area-inset-bottom)); }
+  #editBox h3, #ordersBox h3, #endedBox h3 { margin:0 0 10px; font-size:17px; display:flex; justify-content:space-between; align-items:center; }
+  #editBox h3 button, #ordersBox h3 button, #endedBox h3 button { border:0; background:none; font:inherit; font-size:14px; color:var(--brand); cursor:pointer; }
   .erow { display:flex; gap:10px; align-items:center; padding:8px 0; border-top:1px solid var(--line); }
   .erow img { width:56px; height:68px; object-fit:cover; border-radius:8px; background:#eef0f2; flex:none; }
   .erow div { flex:1; min-width:0; font-size:13.5px; } .erow small { display:block; color:var(--muted); }
@@ -96,6 +99,10 @@
 <div class="bar" id="days"></div>
 <div class="tools"><input id="q" type="search" autocomplete="off"><select id="sup" hidden></select><select id="sort"></select></div>
 <div class="tools2" id="tools2" hidden></div>
+<div id="editBox" hidden><div class="sheet"><h3><span id="editT"></span><button id="editX"></button></h3>
+  <label class="fld"><span id="editNameL"></span><input id="editName" maxlength="80"></label>
+  <label class="fld"><span id="editPriceL"></span><input id="editPrice" inputmode="numeric" maxlength="9"></label>
+  <button id="editSave" class="savebtn"></button></div></div>
 <div id="ordersBox" hidden><div class="sheet"><h3><span id="ordersT"></span><button id="ordersX"></button></h3><p class="ohint" id="ohint"></p><div class="ochips" id="ochips"></div><div id="ordersL"></div></div></div>
 <div id="endedBox" hidden><div class="sheet"><h3><span id="endedT"></span><button id="endedX"></button></h3><div id="endedL"></div></div></div>
 <input id="fLogo" type="file" accept="image/*" hidden>
@@ -119,6 +126,7 @@ const T = {
     vopen: "Open in phone’s video player ↗", vfail: "We’re sorry, this browser couldn’t play the video. Please tap the button below to open it in your phone’s video player.",
     code: "Code", codeAsk: "Your joining code (2–6 letters or numbers). Resellers join with JOIN + this code, and your product numbers start with it. Links you shared with the old code will stop working.", codeSet: (c) => `Code changed to ${c}. Share your new joining link.`, codeBad: "We’re sorry, that code is already in use or not allowed. Please try another one (2–6 letters or numbers).",
     rename: "Name", renameAsk: "Please enter your business name, exactly as you would like customers and resellers to see it:", renamed: "Thank you. Your name has been saved.", renameBad: "We’re sorry, that name can’t be used. Please use 2–40 letters.",
+    edit: "✏️ Edit", editT: "Edit product", editName: "Product name", editPrice: "Your price (₹)", save: "Save", editOk: "Thank you. The product has been updated, and your resellers’ prices have been updated too.", editBad: "Please enter a valid price, for example 450.", editText: "Please choose a different name; this one isn’t allowed.",
     left: (t) => `⏳ ${t} left`, dh: (d, h) => `${d}d ${h}h`, hm: (h, m) => `${h}h ${m}m`, mm: (m) => `${m}m`, endingNow: "⏳ Ending now",
     orders: "📦 Orders", ordersT: "Your orders", ordersNone: "There are no orders yet. They will appear here as soon as a customer orders. 🙏",
     oAll: "All", oNew: "New", oOpen: "In progress", oDone: "Delivered", oOff: "Cancelled", oHint: "You will still receive every new order on WhatsApp, with the buttons to act on it.",
@@ -143,6 +151,7 @@ const T = {
     vopen: "फ़ोन के वीडियो प्लेयर में खोलें ↗", vfail: "यह ब्राउज़र वीडियो नहीं चला पाया। नीचे के बटन से फ़ोन के प्लेयर में खोलें।",
     code: "कोड", codeAsk: "आपका जुड़ने का कोड (2–6 अक्षर या अंक)। रीसेलर JOIN + यह कोड भेजकर जुड़ते हैं, और प्रोडक्ट नंबर इसी से शुरू होते हैं। पुराने कोड वाले लिंक काम करना बंद कर देंगे।", codeSet: (c) => `कोड ${c} हो गया। अपना नया जुड़ने का लिंक शेयर करें।`, codeBad: "यह कोड पहले से लिया है या नहीं चल सकता। दूसरा आज़माएँ (2–6 अक्षर)।",
     rename: "नाम", renameAsk: "आपके बिज़नेस का नाम, जैसा ग्राहक और रीसेलर देखें:", renamed: "नाम सेव हो गया।", renameBad: "यह नाम नहीं चल सकता। 2–40 अक्षर रखें।",
+    edit: "✏️ बदलें", editT: "प्रोडक्ट बदलें", editName: "प्रोडक्ट का नाम", editPrice: "आपकी कीमत (₹)", save: "सेव करें", editOk: "धन्यवाद। प्रोडक्ट अपडेट हो गया है, और आपके रीसेलरों की कीमत भी अपडेट हो गई है।", editBad: "कृपया सही कीमत लिखें, जैसे 450।", editText: "कृपया कोई दूसरा नाम चुनें; यह नाम मान्य नहीं है।",
     left: (t) => `⏳ ${t} बाकी`, dh: (d, h) => `${d}दि ${h}घं`, hm: (h, m) => `${h}घं ${m}मि`, mm: (m) => `${m}मि`, endingNow: "⏳ अभी खत्म हो रहा है",
     orders: "📦 ऑर्डर", ordersT: "आपके ऑर्डर", ordersNone: "अभी कोई ऑर्डर नहीं है। ग्राहक के ऑर्डर करते ही यहाँ दिखेगा। 🙏",
     oAll: "सभी", oNew: "नए", oOpen: "चल रहे", oDone: "डिलीवर", oOff: "रद्द", oHint: "हर नया ऑर्डर आपको WhatsApp पर भी मिलेगा, उस पर काम करने के बटन के साथ।",
@@ -167,6 +176,7 @@ const T = {
     vopen: "फोनच्या व्हिडिओ प्लेयरमध्ये उघडा ↗", vfail: "हा ब्राउझर व्हिडिओ चालवू शकला नाही. खालच्या बटणाने फोनच्या प्लेयरमध्ये उघडा.",
     code: "कोड", codeAsk: "तुमचा जोडण्याचा कोड (2–6 अक्षरे किंवा अंक). रीसेलर JOIN + हा कोड पाठवून जोडतात, आणि प्रॉडक्ट नंबर यानेच सुरू होतात. जुन्या कोडच्या लिंक चालणं बंद होईल.", codeSet: (c) => `कोड ${c} झाला. तुमची नवी जोडण्याची लिंक शेअर करा.`, codeBad: "हा कोड आधीच घेतला आहे किंवा चालणार नाही. दुसरा वापरा (2–6 अक्षरे).",
     rename: "नाव", renameAsk: "तुमच्या व्यवसायाचं नाव, जसं ग्राहक आणि रीसेलरना दिसावं:", renamed: "नाव सेव्ह झालं.", renameBad: "हे नाव चालणार नाही. 2–40 अक्षरे ठेवा.",
+    edit: "✏️ बदला", editT: "प्रॉडक्ट बदला", editName: "प्रॉडक्टचे नाव", editPrice: "तुमची किंमत (₹)", save: "सेव्ह करा", editOk: "धन्यवाद. प्रॉडक्ट अपडेट झाला आहे, आणि तुमच्या रीसेलरच्या किमतीही अपडेट झाल्या आहेत.", editBad: "कृपया योग्य किंमत लिहा, उदा. 450.", editText: "कृपया दुसरे नाव निवडा; हे नाव चालणार नाही.",
     left: (t) => `⏳ ${t} बाकी`, dh: (d, h) => `${d}दि ${h}ता`, hm: (h, m) => `${h}ता ${m}मि`, mm: (m) => `${m}मि`, endingNow: "⏳ आत्ता संपत आहे",
     orders: "📦 ऑर्डर", ordersT: "तुमच्या ऑर्डर", ordersNone: "अजून ऑर्डर नाहीत. ग्राहकाने ऑर्डर करताच इथे दिसेल. 🙏",
     oAll: "सर्व", oNew: "नवीन", oOpen: "चालू", oDone: "डिलिव्हर", oOff: "रद्द", oHint: "प्रत्येक नवीन ऑर्डर तुम्हाला WhatsApp वरही मिळेल, त्यावर काम करण्याच्या बटणांसह.",
@@ -246,9 +256,10 @@ const fmtDay = (iso) => new Date(iso).toLocaleDateString((data?.lang || "en") + 
 
 // Supplier: extend a product, mark it sold out, or re-list ended ones.
 $("grid").addEventListener("click", async (e) => {
-  const ext = e.target.closest("[data-ext]"), sold = e.target.closest("[data-sold]");
-  if (!ext && !sold) return;
+  const ext = e.target.closest("[data-ext]"), sold = e.target.closest("[data-sold]"), ed = e.target.closest("[data-edit]");
+  if (!ext && !sold && !ed) return;
   e.stopPropagation();
+  if (ed) { openEdit(Number(ed.dataset.edit)); return; }
   try {
     if (sold) {
       if (!confirm(L.soldAsk)) return;
@@ -262,6 +273,37 @@ $("grid").addEventListener("click", async (e) => {
     toast(L.extOk(r.live_until === "infinity" ? L.always : L.till(fmtDay(r.live_until))), 3500); load();
   } catch { toast(L.tryAgain, 3500); }
 }, true);
+// Supplier: edit a product's name and price.
+let editKey = null;
+function openEdit(key) {
+  const p = (data?.products || []).find((x) => x.key === key); if (!p) return;
+  editKey = key;
+  $("editT").textContent = L.editT; $("editX").textContent = L.close; $("editNameL").textContent = L.editName;
+  $("editPriceL").textContent = L.editPrice; $("editSave").textContent = L.save;
+  $("editName").value = p.title && p.title !== p.code ? p.title : "";
+  $("editPrice").value = p.price ? String(p.price) : "";
+  $("editBox").hidden = false; setTimeout(() => $(p.price ? "editName" : "editPrice").focus(), 50);
+}
+$("editX").addEventListener("click", () => { $("editBox").hidden = true; });
+$("editBox").addEventListener("click", (e) => { if (e.target.id === "editBox") $("editBox").hidden = true; });
+$("editSave").addEventListener("click", async () => {
+  const p = (data?.products || []).find((x) => x.key === editKey); if (!p) return;
+  const title = $("editName").value.trim(), raw = $("editPrice").value.replace(/[,₹\s]/g, "");
+  const price = raw ? Number(raw) : null;
+  if (raw && !(price > 0)) { alert(L.editBad); return; }
+  const body = { key: editKey };
+  if (price && price !== p.price) body.price = price;
+  if (title && title !== p.title) body.title = title;
+  if (!body.price && !body.title) { $("editBox").hidden = true; return; }
+  $("editSave").disabled = true;
+  try {
+    const r = await RR.call("edit", body);
+    if (r?.error === "text") { alert(L.editText); return; }
+    if (r?.error) { alert(r.error === "price" ? L.editBad : L.tryAgain); return; }
+    $("editBox").hidden = true; toast(L.editOk, 4000); load(true);
+  } catch (e) { const m = e?.message; alert(m === "text" ? L.editText : m === "price" ? L.editBad : L.tryAgain); } finally { $("editSave").disabled = false; }
+});
+
 async function showEnded() {
   $("endedT").textContent = L.endedT; $("endedX").textContent = L.close;
   $("endedL").innerHTML = "…"; $("endedBox").hidden = false;
@@ -309,7 +351,7 @@ function render() {
       <div class="meta"><b>${esc(p.title)}</b><small>${esc([p.code, p.sizes.slice(0, 4).join(" "), p.supplier].filter(Boolean).join(" · "))}</small>
         ${p.stars ? `<div class="stars">${"★".repeat(Math.round(p.stars))}${"☆".repeat(5 - Math.round(p.stars))} ${Number(p.stars).toFixed(1)} <span>· ${L.ordered(p.orders)}</span></div>` : ""}
         ${p.desc && p.desc !== p.title ? `<div class="desc" data-desc>${esc(p.desc)}</div>` : ""}
-        ${data.role === "supplier" ? `<div class="live"><span>${p.live_until === "infinity" || !p.live_until ? L.liveAlways : L.liveTill(fmtDay(p.live_until) + " " + new Date(p.live_until).toLocaleTimeString((data?.lang || "en") + "-IN", { hour: "numeric", minute: "2-digit" }))}</span><button data-ext="${p.key}">${L.extend}</button><button data-sold="${p.key}">${L.sold}</button></div>` : ""}
+        ${data.role === "supplier" ? `<div class="live"><span>${p.live_until === "infinity" || !p.live_until ? L.liveAlways : L.liveTill(fmtDay(p.live_until) + " " + new Date(p.live_until).toLocaleTimeString((data?.lang || "en") + "-IN", { hour: "numeric", minute: "2-digit" }))}</span><button data-edit="${p.key}">${L.edit}</button><button data-ext="${p.key}">${L.extend}</button><button data-sold="${p.key}">${L.sold}</button></div>` : ""}
         <div class="btns"><button class="one" data-one="${p.key}">${L.one}</button>${p.videos && p.photos ? `<button class="one" data-vid="${p.key}">${L.vbtn}</button>` : ""}</div></div>
     </div>`).join("");
   foot();
