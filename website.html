@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="robots" content="noindex">
+<title>Your websites · Resell Ready</title>
+<style>
+  :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --brand-soft:#e6f4f1; --bg:#f6f7f8; --bad:#b91c1c; --ok:#15803d; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari",sans-serif; color:var(--ink); background:var(--bg); padding-bottom:40px; }
+  header { background:var(--brand); color:#fff; padding:14px 16px 12px; position:sticky; top:0; z-index:5; }
+  header h1 { margin:0; font-size:19px; } header p { margin:3px 0 0; font-size:13px; opacity:.9; } header a { color:#fff; }
+  main { max-width:760px; margin:0 auto; padding:12px; display:grid; gap:12px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px; display:grid; gap:10px; }
+  .card h2 { margin:0; font-size:16.5px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .card p { margin:0; font-size:13.5px; line-height:1.45; color:var(--muted); }
+  .tag { font-size:12px; font-weight:600; padding:3px 8px; border-radius:999px; background:#eef0f2; color:var(--muted); white-space:nowrap; }
+  .tag.on { background:#dcfce7; color:var(--ok); }
+  .link { display:flex; gap:6px; } .link input { flex:1; min-width:0; }
+  input, select { font:inherit; font-size:15px; padding:10px 11px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); width:100%; }
+  label { display:grid; gap:5px; font-size:13px; color:var(--muted); }
+  .mk { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; }
+  button, .btn { font:inherit; font-size:14px; font-weight:600; border-radius:10px; padding:10px 14px; cursor:pointer; border:1px solid var(--brand); background:#fff; color:var(--brand); text-decoration:none; text-align:center; }
+  button.main { background:var(--brand); color:#fff; }
+  button.bad { border-color:#fca5a5; color:var(--bad); }
+  button:disabled { opacity:.5; }
+  .stat { font-size:13.5px; line-height:1.5; } .stat b { color:var(--ink); }
+  .err { color:var(--bad); font-size:13.5px; } .okmsg { color:var(--ok); font-size:13.5px; }
+  details { font-size:13.5px; line-height:1.5; } summary { cursor:pointer; color:var(--brand); font-weight:600; }
+  details ol { padding-left:20px; margin:8px 0 0; } details li { margin:3px 0; }
+  .sw { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--ink); } .sw input { width:auto; }
+  .note { font-size:12.5px; color:var(--muted); }
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:#111827; color:#fff; padding:10px 14px; border-radius:10px; font-size:14px; opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; }
+  #toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<header><h1 id="h"></h1><p><a id="back" href="#"></a></p></header>
+<main id="main"><div class="card"><p id="loading">…</p></div></main>
+<div id="toast"></div>
+<script src="lib/up.js"></script>
+<script>
+"use strict";
+const T = {
+  en: {
+    h: "🌐 Your websites", back: "← Back to my catalogue", only: "This page is for suppliers. Please open it from your catalogue.", bad: "This link isn’t valid. Please ask for a new one on WhatsApp.",
+    freeT: "Your free website", freeP: "A ready shop page with all your live products. Customers order from you on WhatsApp. It updates by itself.",
+    copy: "Copy", copied: "Link copied. Thank you!", open: "Open", shareWa: "Share on WhatsApp", shareText: (u) => `Hello! Please have a look at our latest products: ${u}`,
+    markup: "Website price", pct: "My price + %", flat: "My price + ₹", amount: "Amount", publicL: "Show my website to the public", save: "Save", saved: "Thank you. Your settings have been saved.",
+    shopT: "Shopify", wooT: "WooCommerce (WordPress)", connected: "Connected", notConnected: "Not connected",
+    shopP: "Your products are added to your Shopify store automatically, prices and edits follow, and ended or sold-out products are switched to draft.",
+    wooP: "Your products are added to your WordPress shop automatically, prices and edits follow, and ended or sold-out products are switched to draft.",
+    shopUrl: "Store admin address (ends in .myshopify.com)", shopTok: "Admin API access token (starts with shpat_)",
+    wooUrl: "Website address (starts with https://)", wooKey: "Consumer key (starts with ck_)", wooSec: "Consumer secret (starts with cs_)",
+    connect: "Connect", connecting: "Checking your details…", connectedOk: (n) => `Thank you. ${n} is connected, and your products are being added now.`,
+    live: (n) => `<b>${n}</b> on sale`, off: (n) => `<b>${n}</b> moved to draft`, failed: (n) => `<b>${n}</b> couldn’t be added`, last: (t) => `last update ${t}`, never: "not updated yet",
+    syncNow: "Update now", syncing: "Updating…", synced: (r) => `Done: ${r.created} added, ${r.updated} updated, ${r.off} moved to draft.`, autoOn: "Keep this website updated automatically",
+    disconnect: "Disconnect", disAsk: "Disconnect this website? Products already on it will stay there, but they will no longer be updated.", disOk: "Disconnected. Thank you.",
+    howShop: "How do I get these?", howShopSteps: ["Open your Shopify admin and go to <b>Settings → Apps and sales channels → Develop apps</b>.", "Tap <b>Allow custom app development</b> if asked, then <b>Create an app</b> and name it “Resell Ready”.", "Under <b>Configure Admin API scopes</b>, tick <b>write_products</b> and <b>read_products</b>, then <b>Save</b>.", "Tap <b>Install app</b>, then <b>Reveal token once</b> and copy the token (it starts with shpat_).", "Your admin address is shown under <b>Settings → Domains</b>, for example <i>yourshop.myshopify.com</i>."],
+    howWoo: "How do I get these?", howWooSteps: ["Open your WordPress admin and go to <b>WooCommerce → Settings → Advanced → REST API</b>.", "Tap <b>Add key</b>, write “Resell Ready” as the description, and choose <b>Read/Write</b> permission.", "Tap <b>Generate API key</b> and copy the <b>Consumer key</b> and <b>Consumer secret</b>.", "Your website must open with <b>https://</b>."],
+    keysNote: "Your keys are stored encrypted and used only to add and update your products.",
+    feedT: "Other websites (Wix, Dukaan and others)", feedP: "Give this live product list to your website developer. It always shows your current products, prices and photos.",
+    markupHelp: "Customers see this price. Your price + the amount you choose.", tryAgain: "We’re sorry, that didn’t work. Please try again.",
+  },
+  hi: {
+    h: "🌐 आपकी वेबसाइटें", back: "← मेरे कैटलॉग पर वापस", only: "यह पेज सप्लायर के लिए है। कृपया इसे अपने कैटलॉग से खोलें।", bad: "यह लिंक सही नहीं है। कृपया WhatsApp पर नया लिंक माँगें।",
+    freeT: "आपकी मुफ़्त वेबसाइट", freeP: "आपके सभी लाइव प्रोडक्ट वाला तैयार शॉप पेज। ग्राहक WhatsApp पर आपसे ऑर्डर करते हैं। यह अपने आप अपडेट होता है।",
+    copy: "कॉपी", copied: "लिंक कॉपी हो गया। धन्यवाद!", open: "खोलें", shareWa: "WhatsApp पर शेयर करें", shareText: (u) => `नमस्ते! कृपया हमारे नए प्रोडक्ट देखें: ${u}`,
+    markup: "वेबसाइट की कीमत", pct: "मेरी कीमत + %", flat: "मेरी कीमत + ₹", amount: "राशि", publicL: "मेरी वेबसाइट सबको दिखाएँ", save: "सेव करें", saved: "धन्यवाद। आपकी सेटिंग सेव हो गई है।",
+    shopT: "Shopify", wooT: "WooCommerce (WordPress)", connected: "जुड़ा हुआ", notConnected: "जुड़ा नहीं",
+    shopP: "आपके प्रोडक्ट अपने आप आपके Shopify स्टोर में जुड़ते हैं, कीमत और बदलाव भी, और खत्म या बिक चुके प्रोडक्ट ड्राफ़्ट में चले जाते हैं।",
+    wooP: "आपके प्रोडक्ट अपने आप आपकी WordPress शॉप में जुड़ते हैं, कीमत और बदलाव भी, और खत्म या बिक चुके प्रोडक्ट ड्राफ़्ट में चले जाते हैं।",
+    shopUrl: "स्टोर एडमिन पता (.myshopify.com पर खत्म)", shopTok: "Admin API access token (shpat_ से शुरू)",
+    wooUrl: "वेबसाइट का पता (https:// से शुरू)", wooKey: "Consumer key (ck_ से शुरू)", wooSec: "Consumer secret (cs_ से शुरू)",
+    connect: "जोड़ें", connecting: "आपकी जानकारी जाँची जा रही है…", connectedOk: (n) => `धन्यवाद। ${n} जुड़ गया है, और आपके प्रोडक्ट अभी जोड़े जा रहे हैं।`,
+    live: (n) => `<b>${n}</b> बिक्री पर`, off: (n) => `<b>${n}</b> ड्राफ़्ट में`, failed: (n) => `<b>${n}</b> नहीं जुड़ पाए`, last: (t) => `पिछला अपडेट ${t}`, never: "अभी अपडेट नहीं हुआ",
+    syncNow: "अभी अपडेट करें", syncing: "अपडेट हो रहा है…", synced: (r) => `हो गया: ${r.created} जोड़े, ${r.updated} अपडेट, ${r.off} ड्राफ़्ट में।`, autoOn: "इस वेबसाइट को अपने आप अपडेट रखें",
+    disconnect: "हटाएँ", disAsk: "यह वेबसाइट हटाएँ? जो प्रोडक्ट पहले से हैं वे रहेंगे, पर अब अपडेट नहीं होंगे।", disOk: "हट गया। धन्यवाद।",
+    howShop: "ये कहाँ से मिलेंगे?", howShopSteps: ["Shopify एडमिन खोलें और <b>Settings → Apps and sales channels → Develop apps</b> पर जाएँ।", "पूछे तो <b>Allow custom app development</b> दबाएँ, फिर <b>Create an app</b> करें और नाम “Resell Ready” रखें।", "<b>Configure Admin API scopes</b> में <b>write_products</b> और <b>read_products</b> चुनें, फिर <b>Save</b>।", "<b>Install app</b> दबाएँ, फिर <b>Reveal token once</b> दबाकर token कॉपी करें (shpat_ से शुरू)।", "एडमिन पता <b>Settings → Domains</b> में दिखता है, जैसे <i>yourshop.myshopify.com</i>।"],
+    howWoo: "ये कहाँ से मिलेंगे?", howWooSteps: ["WordPress एडमिन खोलें और <b>WooCommerce → Settings → Advanced → REST API</b> पर जाएँ।", "<b>Add key</b> दबाएँ, विवरण में “Resell Ready” लिखें और <b>Read/Write</b> चुनें।", "<b>Generate API key</b> दबाएँ और <b>Consumer key</b> व <b>Consumer secret</b> कॉपी करें।", "आपकी वेबसाइट <b>https://</b> से खुलनी चाहिए।"],
+    keysNote: "आपकी keys सुरक्षित (एन्क्रिप्ट) रखी जाती हैं और सिर्फ़ आपके प्रोडक्ट जोड़ने और अपडेट करने में इस्तेमाल होती हैं।",
+    feedT: "दूसरी वेबसाइटें (Wix, Dukaan आदि)", feedP: "यह लाइव प्रोडक्ट लिस्ट अपने वेबसाइट डेवलपर को दें। इसमें हमेशा आपके मौजूदा प्रोडक्ट, कीमत और फ़ोटो होते हैं।",
+    markupHelp: "ग्राहक यही कीमत देखते हैं। आपकी कीमत + आपकी चुनी राशि।", tryAgain: "क्षमा करें, यह नहीं हुआ। कृपया फिर कोशिश करें।",
+  },
+  mr: {
+    h: "🌐 तुमच्या वेबसाइट", back: "← माझ्या कॅटलॉगवर परत", only: "हे पेज सप्लायरसाठी आहे. कृपया ते तुमच्या कॅटलॉगमधून उघडा.", bad: "ही लिंक बरोबर नाही. कृपया WhatsApp वर नवीन लिंक मागा.",
+    freeT: "तुमची मोफत वेबसाइट", freeP: "तुमचे सर्व लाइव्ह प्रॉडक्ट असलेले तयार शॉप पेज. ग्राहक WhatsApp वर तुमच्याकडे ऑर्डर करतात. ते आपोआप अपडेट होते.",
+    copy: "कॉपी", copied: "लिंक कॉपी झाली. धन्यवाद!", open: "उघडा", shareWa: "WhatsApp वर शेअर करा", shareText: (u) => `नमस्कार! कृपया आमचे नवीन प्रॉडक्ट पहा: ${u}`,
+    markup: "वेबसाइटवरील किंमत", pct: "माझी किंमत + %", flat: "माझी किंमत + ₹", amount: "रक्कम", publicL: "माझी वेबसाइट सर्वांना दाखवा", save: "सेव्ह करा", saved: "धन्यवाद. तुमची सेटिंग सेव्ह झाली.",
+    shopT: "Shopify", wooT: "WooCommerce (WordPress)", connected: "जोडलेले", notConnected: "जोडलेले नाही",
+    shopP: "तुमचे प्रॉडक्ट आपोआप तुमच्या Shopify स्टोअरमध्ये जोडले जातात, किंमत आणि बदलही, आणि संपलेले किंवा विकलेले प्रॉडक्ट ड्राफ्टमध्ये जातात.",
+    wooP: "तुमचे प्रॉडक्ट आपोआप तुमच्या WordPress शॉपमध्ये जोडले जातात, किंमत आणि बदलही, आणि संपलेले किंवा विकलेले प्रॉडक्ट ड्राफ्टमध्ये जातात.",
+    shopUrl: "स्टोअर अॅडमिन पत्ता (.myshopify.com ने संपणारा)", shopTok: "Admin API access token (shpat_ ने सुरू)",
+    wooUrl: "वेबसाइटचा पत्ता (https:// ने सुरू)", wooKey: "Consumer key (ck_ ने सुरू)", wooSec: "Consumer secret (cs_ ने सुरू)",
+    connect: "जोडा", connecting: "तुमची माहिती तपासत आहोत…", connectedOk: (n) => `धन्यवाद. ${n} जोडले गेले, आणि तुमचे प्रॉडक्ट आत्ता जोडले जात आहेत.`,
+    live: (n) => `<b>${n}</b> विक्रीवर`, off: (n) => `<b>${n}</b> ड्राफ्टमध्ये`, failed: (n) => `<b>${n}</b> जोडता आले नाहीत`, last: (t) => `शेवटचे अपडेट ${t}`, never: "अजून अपडेट झाले नाही",
+    syncNow: "आत्ता अपडेट करा", syncing: "अपडेट होत आहे…", synced: (r) => `झाले: ${r.created} जोडले, ${r.updated} अपडेट, ${r.off} ड्राफ्टमध्ये.`, autoOn: "ही वेबसाइट आपोआप अपडेट ठेवा",
+    disconnect: "काढा", disAsk: "ही वेबसाइट काढायची? आधीचे प्रॉडक्ट तिथे राहतील, पण यापुढे अपडेट होणार नाहीत.", disOk: "काढले. धन्यवाद.",
+    howShop: "हे कुठे मिळेल?", howShopSteps: ["Shopify अॅडमिन उघडा आणि <b>Settings → Apps and sales channels → Develop apps</b> वर जा.", "विचारल्यास <b>Allow custom app development</b> दाबा, मग <b>Create an app</b> करा आणि नाव “Resell Ready” ठेवा.", "<b>Configure Admin API scopes</b> मध्ये <b>write_products</b> आणि <b>read_products</b> निवडा, मग <b>Save</b>.", "<b>Install app</b> दाबा, मग <b>Reveal token once</b> दाबून token कॉपी करा (shpat_ ने सुरू).", "अॅडमिन पत्ता <b>Settings → Domains</b> मध्ये दिसतो, उदा. <i>yourshop.myshopify.com</i>."],
+    howWoo: "हे कुठे मिळेल?", howWooSteps: ["WordPress अॅडमिन उघडा आणि <b>WooCommerce → Settings → Advanced → REST API</b> वर जा.", "<b>Add key</b> दाबा, वर्णनात “Resell Ready” लिहा आणि <b>Read/Write</b> निवडा.", "<b>Generate API key</b> दाबा आणि <b>Consumer key</b> व <b>Consumer secret</b> कॉपी करा.", "तुमची वेबसाइट <b>https://</b> ने उघडली पाहिजे."],
+    keysNote: "तुमच्या keys सुरक्षित (एन्क्रिप्ट) ठेवल्या जातात आणि फक्त तुमचे प्रॉडक्ट जोडण्यासाठी आणि अपडेट करण्यासाठी वापरल्या जातात.",
+    feedT: "इतर वेबसाइट (Wix, Dukaan इ.)", feedP: "ही लाइव्ह प्रॉडक्ट यादी तुमच्या वेबसाइट डेव्हलपरला द्या. त्यात नेहमी तुमचे सध्याचे प्रॉडक्ट, किंमती आणि फोटो असतात.",
+    markupHelp: "ग्राहकांना हीच किंमत दिसते. तुमची किंमत + तुम्ही निवडलेली रक्कम.", tryAgain: "क्षमस्व, हे झाले नाही. कृपया पुन्हा प्रयत्न करा.",
+  },
+};
+let L = T.en, S = null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function toast(m, ms = 3200) { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("show"), ms); }
+const when = (iso) => iso ? new Date(iso).toLocaleString(document.documentElement.lang + "-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : L.never;
+const mkFields = (id, type, amt) => `<div class="mk"><label>${L.markup}<select id="${id}T"><option value="pct"${type !== "flat" ? " selected" : ""}>${L.pct}</option><option value="flat"${type === "flat" ? " selected" : ""}>${L.flat}</option></select></label>
+  <label>${L.amount}<input id="${id}A" inputmode="decimal" value="${esc(amt ?? 0)}"></label></div><p class="note">${L.markupHelp}</p>`;
+
+function siteCard(pf) {
+  const s = (S.sites || []).find((x) => x.platform === pf);
+  const title = pf === "shopify" ? L.shopT : L.wooT, about = pf === "shopify" ? L.shopP : L.wooP;
+  const steps = pf === "shopify" ? L.howShopSteps : L.howWooSteps;
+  if (s) return `<div class="card" data-pf="${pf}"><h2>${title}<span class="tag on">✓ ${L.connected}</span></h2>
+    <p><b>${esc(s.name || s.url)}</b></p>
+    <div class="stat">${[L.live(s.live), L.off(s.off), s.failed ? L.failed(s.failed) : "", L.last(when(s.last_sync_at))].filter(Boolean).join(" · ")}</div>
+    ${s.last_error ? `<div class="err">⚠️ ${esc(s.last_error)}</div>` : ""}
+    ${mkFields(pf, s.markup_type, s.markup)}
+    <label class="sw"><input type="checkbox" id="${pf}E"${s.enabled ? " checked" : ""}> ${L.autoOn}</label>
+    <div class="btns"><button class="main" data-save="${pf}">${L.save}</button><button data-sync="${pf}">${L.syncNow}</button><button class="bad" data-dis="${pf}">${L.disconnect}</button></div></div>`;
+  return `<div class="card" data-pf="${pf}"><h2>${title}<span class="tag">${L.notConnected}</span></h2><p>${about}</p>
+    ${pf === "shopify" ? `<label>${L.shopUrl}<input id="shopifyU" placeholder="yourshop.myshopify.com" autocapitalize="off"></label>
+      <label>${L.shopTok}<input id="shopifyK" placeholder="shpat_…" autocapitalize="off" autocomplete="off"></label>`
+    : `<label>${L.wooUrl}<input id="woocommerceU" placeholder="https://yourshop.com" autocapitalize="off"></label>
+      <label>${L.wooKey}<input id="woocommerceK" placeholder="ck_…" autocapitalize="off" autocomplete="off"></label>
+      <label>${L.wooSec}<input id="woocommerceS" placeholder="cs_…" autocapitalize="off" autocomplete="off"></label>`}
+    ${mkFields(pf, "pct", 0)}
+    <details><summary>${pf === "shopify" ? L.howShop : L.howWoo}</summary><ol>${steps.map((x) => `<li>${x}</li>`).join("")}</ol></details>
+    <p class="note">🔒 ${L.keysNote}</p><div class="err" id="${pf}Err"></div>
+    <div class="btns"><button class="main" data-connect="${pf}">${L.connect}</button></div></div>`;
+}
+
+function render() {
+  const f = S.free;
+  $("main").innerHTML = `
+  <div class="card"><h2>${L.freeT}<span class="tag ${f.public ? "on" : ""}">${f.public ? "✓" : "—"}</span></h2><p>${L.freeP}</p>
+    <div class="link"><input id="freeUrl" readonly value="${esc(f.url)}"><button data-copy="freeUrl">${L.copy}</button></div>
+    <div class="btns"><a class="btn" href="${esc(f.url)}" target="_blank" rel="noopener">${L.open}</a><a class="btn" href="https://wa.me/?text=${encodeURIComponent(L.shareText(f.url))}" target="_blank" rel="noopener">${L.shareWa}</a></div>
+    ${mkFields("free", f.markup_type, f.markup)}
+    <label class="sw"><input type="checkbox" id="freeP"${f.public ? " checked" : ""}> ${L.publicL}</label>
+    <div class="btns"><button class="main" data-save="free">${L.save}</button></div></div>
+  ${siteCard("shopify")}
+  ${siteCard("woocommerce")}
+  <div class="card"><h2>${L.feedT}</h2><p>${L.feedP}</p>
+    <div class="link"><input id="feedUrl" readonly value="${esc(S.feed)}"><button data-copy="feedUrl">${L.copy}</button></div></div>`;
+}
+
+async function load() {
+  try {
+    const d = await RR.info();
+    L = T[d.lang] || T.en; document.documentElement.lang = d.lang || "en";
+    $("h").textContent = L.h; $("back").textContent = L.back; $("back").href = `./?c=${encodeURIComponent(RR.tok)}`;
+    if (d.role !== "supplier") { $("main").innerHTML = `<div class="card"><p>${L.only}</p></div>`; return; }
+    S = await RR.call("site", {});
+    render();
+  } catch { $("main").innerHTML = `<div class="card"><p>${L.bad}</p></div>`; }
+}
+
+const mk = (id) => ({ markup_type: $(`${id}T`).value, markup: Number(String($(`${id}A`).value).replace(/[^\d.]/g, "")) || 0 });
+$("main").addEventListener("click", async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.copy) {
+    const v = $(b.dataset.copy).value;
+    try { await navigator.clipboard.writeText(v); } catch { $(b.dataset.copy).select(); document.execCommand("copy"); }
+    toast(L.copied); return;
+  }
+  b.disabled = true;
+  try {
+    if (b.dataset.save === "free") { await RR.call("sitesave", { free: { ...mk("free"), public: $("freeP").checked } }); toast(L.saved); }
+    else if (b.dataset.save) { const pf = b.dataset.save; await RR.call("sitesave", { sites: [{ platform: pf, ...mk(pf), enabled: $(`${pf}E`).checked }] }); toast(L.saved); }
+    else if (b.dataset.connect) {
+      const pf = b.dataset.connect; $(`${pf}Err`).textContent = ""; b.textContent = L.connecting;
+      const body = pf === "shopify" ? { platform: pf, url: $("shopifyU").value, token: $("shopifyK").value, ...mk(pf) }
+        : { platform: pf, url: $("woocommerceU").value, key: $("woocommerceK").value, secret: $("woocommerceS").value, ...mk(pf) };
+      try { const r = await RR.call("siteconnect", body); toast(L.connectedOk(r.name), 5000); }
+      catch (err) { $(`${pf}Err`).textContent = err.message || L.tryAgain; b.textContent = L.connect; return; }
+    } else if (b.dataset.sync) {
+      b.textContent = L.syncing;
+      const r = await RR.call("sitesync", { platform: b.dataset.sync });
+      const x = (r.results || [])[0]; if (x) toast(x.error ? `⚠️ ${x.error}` : L.synced(x), 5000);
+    } else if (b.dataset.dis) {
+      if (!confirm(L.disAsk)) return;
+      await RR.call("sitedisconnect", { platform: b.dataset.dis }); toast(L.disOk);
+    }
+    S = await RR.call("site", {}); render();
+  } catch { toast(L.tryAgain); } finally { b.disabled = false; }
+});
+load();
+</script>
+</body>
+</html>

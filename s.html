@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>Shop</title>
+<style>
+  :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --brand:#0f766e; --bg:#f6f7f8; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari",sans-serif; color:var(--ink); background:var(--bg); }
+  header { background:var(--brand); color:#fff; padding:16px; display:flex; gap:12px; align-items:center; }
+  header img { width:48px; height:48px; border-radius:12px; object-fit:cover; background:#fff; }
+  header h1 { margin:0; font-size:20px; } header p { margin:2px 0 0; font-size:13px; opacity:.9; }
+  .bar { max-width:980px; margin:0 auto; padding:12px 12px 0; }
+  .bar input { width:100%; font:inherit; font-size:15px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; }
+  .grid { max-width:980px; margin:0 auto; padding:12px; display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; cursor:pointer; display:flex; flex-direction:column; }
+  .pic { position:relative; aspect-ratio:4/5; background:#eef0f2; } .pic img { width:100%; height:100%; object-fit:cover; display:block; }
+  .price { position:absolute; right:6px; top:6px; background:#b91c1c; color:#fff; font-weight:700; font-size:13.5px; padding:3px 8px; border-radius:999px; }
+  .timer { position:absolute; right:6px; bottom:6px; background:rgba(17,24,39,.78); color:#fff; font-size:11.5px; font-weight:600; padding:3px 7px; border-radius:999px; }
+  .timer.soon { background:#b91c1c; }
+  .info { padding:9px 10px 11px; } .info b { font-size:14px; display:block; } .info small { color:var(--muted); font-size:12.5px; }
+  .empty { text-align:center; color:var(--muted); padding:40px 16px; grid-column:1/-1; }
+  #sheet { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:20; display:flex; align-items:flex-end; justify-content:center; }
+  #sheet[hidden] { display:none; }
+  .sh { background:#fff; width:100%; max-width:640px; max-height:92vh; overflow:auto; border-radius:16px 16px 0 0; padding-bottom:calc(14px + env(safe-area-inset-bottom)); }
+  .gal { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; } .gal img { flex:none; width:100%; max-height:60vh; object-fit:contain; background:#111; scroll-snap-align:start; }
+  .bd { padding:14px; display:grid; gap:10px; } .bd h2 { margin:0; font-size:18px; } .bd .pr { font-size:20px; font-weight:800; color:#b91c1c; }
+  .bd .desc { white-space:pre-wrap; font-size:14px; line-height:1.45; color:#374151; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; } .chip { border:1px solid var(--line); background:#fff; border-radius:999px; padding:8px 14px; font:inherit; font-size:14px; cursor:pointer; }
+  .chip.on { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .order { display:block; text-align:center; background:#16a34a; color:#fff; text-decoration:none; font-weight:700; font-size:16px; padding:14px; border-radius:12px; }
+  .row2 { display:flex; gap:8px; } .row2 button { flex:1; font:inherit; font-size:14px; font-weight:600; padding:11px; border-radius:12px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+  footer { text-align:center; color:var(--muted); font-size:12px; padding:18px 12px 30px; }
+</style>
+</head>
+<body>
+<header><img id="logo" alt="" hidden><div><h1 id="name">…</h1><p id="sub"></p></div></header>
+<div class="bar"><input id="q" type="search"></div>
+<div class="grid" id="grid"></div>
+<div id="sheet" hidden><div class="sh" id="sh"></div></div>
+<footer id="foot"></footer>
+<script>
+"use strict";
+const API = "https://obgedilcyvaaewpvvdzi.supabase.co/functions/v1/shop";
+const lang = (navigator.language || "en").slice(0, 2);
+const T = {
+  en: { sub: (n) => `${n} products available`, q: "Search products", none: "New products are coming soon. Please check back shortly. 🙏", gone: "This shop isn’t available right now.", order: "💬 Order on WhatsApp", share: "Share", close: "Close", size: "Choose a size", msg: (c, t, s) => `Hello! I would like to order ${c} – ${t}${s ? `, size ${s}` : ""}. Is it available?`, left: (t) => `⏳ ${t} left`, foot: "Orders are confirmed by the seller on WhatsApp. Thank you for shopping with us!", shareMsg: (t, u) => `${t}: ${u}`, pick: "Please choose a size first." },
+  hi: { sub: (n) => `${n} प्रोडक्ट उपलब्ध`, q: "प्रोडक्ट खोजें", none: "नए प्रोडक्ट जल्द आ रहे हैं। कृपया थोड़ी देर बाद देखें। 🙏", gone: "यह दुकान अभी उपलब्ध नहीं है।", order: "💬 WhatsApp पर ऑर्डर करें", share: "शेयर", close: "बंद करें", size: "साइज़ चुनें", msg: (c, t, s) => `नमस्ते! मुझे ${c} – ${t}${s ? `, साइज़ ${s}` : ""} ऑर्डर करना है। क्या यह उपलब्ध है?`, left: (t) => `⏳ ${t} बाकी`, foot: "ऑर्डर विक्रेता WhatsApp पर पक्का करते हैं।", shareMsg: (t, u) => `${t}: ${u}`, pick: "कृपया पहले साइज़ चुनें।" },
+  mr: { sub: (n) => `${n} प्रॉडक्ट उपलब्ध`, q: "प्रॉडक्ट शोधा", none: "नवीन प्रॉडक्ट लवकरच येत आहेत. कृपया थोड्या वेळाने पहा. 🙏", gone: "हे दुकान आत्ता उपलब्ध नाही.", order: "💬 WhatsApp वर ऑर्डर करा", share: "शेअर", close: "बंद करा", size: "साइज निवडा", msg: (c, t, s) => `नमस्कार! मला ${c} – ${t}${s ? `, साइज ${s}` : ""} ऑर्डर करायचे आहे. उपलब्ध आहे का?`, left: (t) => `⏳ ${t} बाकी`, foot: "ऑर्डर विक्रेते WhatsApp वर पक्की करतात.", shareMsg: (t, u) => `${t}: ${u}`, pick: "कृपया आधी साइज निवडा." },
+};
+const L = T[lang] || T.en;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const rs = (n) => "₹" + Number(n).toLocaleString("en-IN");
+const code = new URLSearchParams(location.search).get("s") || "";
+let D = null, size = null;
+
+function left(iso) {
+  const ms = new Date(iso).getTime() - Date.now(); if (ms <= 0) return null;
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  return { t: L.left(d ? `${d}d ${h % 24}h` : h ? `${h}h ${m % 60}m` : `${Math.max(1, m)}m`), soon: ms < 86400000 };
+}
+function grid() {
+  const q = $("q").value.trim().toLowerCase();
+  const list = D.products.filter((p) => !q || `${p.title} ${p.code} ${p.desc}`.toLowerCase().includes(q) || String(p.price || "").includes(q));
+  $("grid").innerHTML = list.length ? list.map((p, i) => {
+    const lf = p.ends ? left(p.ends) : null;
+    return `<div class="card" data-i="${D.products.indexOf(p)}"><div class="pic"><img src="${esc(p.img)}" alt="" loading="lazy">
+      ${p.price ? `<span class="price">${rs(p.price)}</span>` : ""}${lf ? `<span class="timer${lf.soon ? " soon" : ""}">${lf.t}</span>` : ""}</div>
+      <div class="info"><b>${esc(p.title)}</b><small>${esc([p.code, p.sizes.join(" · ")].filter(Boolean).join(" · "))}</small></div></div>`;
+  }).join("") : `<div class="empty">${L.none}</div>`;
+}
+function open(i) {
+  const p = D.products[i]; size = p.sizes.length === 1 ? p.sizes[0] : null;
+  const paint = () => {
+    $("sh").innerHTML = `<div class="gal">${(p.photos.length ? p.photos : [p.img]).map((u) => `<img src="${esc(u)}" alt="">`).join("")}</div>
+      <div class="bd"><h2>${esc(p.title)}</h2>${p.price ? `<div class="pr">${rs(p.price)}</div>` : ""}
+      ${p.desc ? `<div class="desc">${esc(p.desc)}</div>` : ""}
+      ${p.sizes.length ? `<div><small>${L.size}</small><div class="chips">${p.sizes.map((s) => `<button class="chip${s === size ? " on" : ""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div></div>` : ""}
+      <a class="order" id="ord" href="https://wa.me/${esc(D.whatsapp)}?text=${encodeURIComponent(L.msg(p.code, p.title, size))}" target="_blank" rel="noopener">${L.order}</a>
+      <div class="row2"><button id="shr">${L.share}</button><button id="cls">${L.close}</button></div></div>`;
+  };
+  paint(); $("sheet").hidden = false;
+  $("sh").onclick = async (e) => {
+    const c = e.target.closest("[data-s]"); if (c) { size = c.dataset.s; paint(); return; }
+    if (e.target.id === "ord" && p.sizes.length > 1 && !size) { e.preventDefault(); alert(L.pick); return; }
+    if (e.target.id === "cls") { $("sheet").hidden = true; return; }
+    if (e.target.id === "shr") {
+      const u = location.href;
+      if (navigator.share) { try { await navigator.share({ title: p.title, text: L.shareMsg(p.title, u) }); } catch {} }
+      else window.open(`https://wa.me/?text=${encodeURIComponent(L.shareMsg(p.title, u))}`, "_blank");
+    }
+  };
+}
+$("sheet").addEventListener("click", (e) => { if (e.target.id === "sheet") $("sheet").hidden = true; });
+$("grid").addEventListener("click", (e) => { const c = e.target.closest("[data-i]"); if (c) open(Number(c.dataset.i)); });
+$("q").placeholder = L.q; $("q").addEventListener("input", () => D && grid());
+$("foot").textContent = L.foot;
+(async () => {
+  try {
+    const r = await fetch(`${API}?site=${encodeURIComponent(code)}`);
+    if (!r.ok) throw 0;
+    D = await r.json();
+    document.title = D.name; $("name").textContent = D.name; $("sub").textContent = L.sub(D.products.length);
+    if (D.logo) { $("logo").src = D.logo; $("logo").hidden = false; }
+    grid();
+    setInterval(grid, 60000);
+  } catch { $("name").textContent = L.gone; $("grid").innerHTML = ""; $("q").hidden = true; }
+})();
+</script>
+</body>
+</html>
